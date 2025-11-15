@@ -1,112 +1,259 @@
-import { Image } from "expo-image";
-import { Platform, StyleSheet } from "react-native";
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import {
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from "react-native";
 
-import { HelloWave } from "@/components/hello-wave";
-import ParallaxScrollView from "@/components/parallax-scroll-view";
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
-import { Link } from "expo-router";
+export default function HomeTab() {
+    const colorScheme = useColorScheme();
+    const isDark = colorScheme === "dark";
 
-export default function HomeScreen() {
+    // Dynamic data - could be fetched from state/API
+    const userName = "Sarah";
+    const todayScore = 8.5;
+    const maxScore = 10;
+    const changeFromYesterday = 1.5;
+    const streakDays = 12;
+
     return (
-        <ParallaxScrollView
-            headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
-            headerImage={
-                <Image
-                    source={require("@/assets/images/partial-react-logo.png")}
-                    style={styles.reactLogo}
-                />
-            }
+        <SafeAreaView
+            style={[styles.container, isDark && styles.containerDark]}
         >
-            <ThemedView style={styles.titleContainer}>
-                <ThemedText type="title">Welcome!</ThemedText>
-                <HelloWave />
-            </ThemedView>
-            <ThemedView style={styles.stepContainer}>
-                <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-                <ThemedText>
-                    Edit{" "}
-                    <ThemedText type="defaultSemiBold">
-                        app/(tabs)/index.tsx
-                    </ThemedText>{" "}
-                    to see changes. Press{" "}
-                    <ThemedText type="defaultSemiBold">
-                        {Platform.select({
-                            ios: "cmd + d",
-                            android: "cmd + m",
-                            web: "F12",
-                        })}
-                    </ThemedText>{" "}
-                    to open developer tools.
-                </ThemedText>
-            </ThemedView>
-            <ThemedView style={styles.stepContainer}>
-                <Link href="/modal">
-                    <Link.Trigger>
-                        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-                    </Link.Trigger>
-                    <Link.Preview />
-                    <Link.Menu>
-                        <Link.MenuAction
-                            title="Action"
-                            icon="cube"
-                            onPress={() => alert("Action pressed")}
-                        />
-                        <Link.MenuAction
-                            title="Share"
-                            icon="square.and.arrow.up"
-                            onPress={() => alert("Share pressed")}
-                        />
-                        <Link.Menu title="More" icon="ellipsis">
-                            <Link.MenuAction
-                                title="Delete"
-                                icon="trash"
-                                destructive
-                                onPress={() => alert("Delete pressed")}
-                            />
-                        </Link.Menu>
-                    </Link.Menu>
-                </Link>
+            <ScrollView
+                style={styles.scrollView}
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+            >
+                {/* Header */}
+                <View style={styles.header}>
+                    <View>
+                        <Text
+                            style={[
+                                styles.greeting,
+                                isDark && styles.greetingDark,
+                            ]}
+                        >
+                            Hey {userName}! 👋
+                        </Text>
+                        <Text
+                            style={[
+                                styles.subGreeting,
+                                isDark && styles.subGreetingDark,
+                            ]}
+                        >
+                            You're doing amazing today
+                        </Text>
+                    </View>
+                    <View style={styles.avatar}>
+                        <Text style={styles.avatarText}>
+                            {userName.charAt(0)}
+                        </Text>
+                    </View>
+                </View>
 
-                <ThemedText>
-                    {`Tap the Explore tab to learn more about what's included in this starter app.`}
-                </ThemedText>
-            </ThemedView>
-            <ThemedView style={styles.stepContainer}>
-                <ThemedText type="subtitle">
-                    Step 3: Get a fresh start
-                </ThemedText>
-                <ThemedText>
-                    {`When you're ready, run `}
-                    <ThemedText type="defaultSemiBold">
-                        npm run reset-project
-                    </ThemedText>{" "}
-                    to get a fresh{" "}
-                    <ThemedText type="defaultSemiBold">app</ThemedText>{" "}
-                    directory. This will move the current{" "}
-                    <ThemedText type="defaultSemiBold">app</ThemedText> to{" "}
-                    <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-                </ThemedText>
-            </ThemedView>
-        </ParallaxScrollView>
+                {/* Progress Card */}
+                <View style={styles.progressCard}>
+                    <View style={styles.progressHeader}>
+                        <Text style={styles.progressLabel}>
+                            ✨ TODAY'S PROGRESS
+                        </Text>
+                    </View>
+
+                    <View style={styles.scoreContainer}>
+                        <Text style={styles.scoreMain}>{todayScore}</Text>
+                        <Text style={styles.scoreMax}>/{maxScore}</Text>
+                    </View>
+
+                    <Text style={styles.scoreChange}>
+                        📈 +{changeFromYesterday} from yesterday
+                    </Text>
+
+                    <Text style={styles.encouragement}>
+                        Excellent work! You're building healthy habits.
+                    </Text>
+
+                    <View style={styles.streakBadge}>
+                        <Text style={styles.streakText}>
+                            🏆 {streakDays} Day Streak 🔥
+                        </Text>
+                    </View>
+                </View>
+
+                {/* Action Buttons */}
+                <View style={styles.actionButtons}>
+                    <TouchableOpacity
+                        style={[styles.actionButton, styles.logMealButton]}
+                        activeOpacity={0.8}
+                    >
+                        <Text style={styles.actionIcon}>➕</Text>
+                        <Text style={styles.actionTitle}>Log Meal</Text>
+                        <Text style={styles.actionSubtitle}>Quick & easy</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.actionButton, styles.quickWinButton]}
+                        activeOpacity={0.8}
+                    >
+                        <Text style={styles.actionIcon}>⚡</Text>
+                        <Text style={styles.actionTitle}>Quick Win</Text>
+                        <Text style={styles.actionSubtitle}>Get a tip</Text>
+                    </TouchableOpacity>
+                </View>
+            </ScrollView>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    titleContainer: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 8,
+    container: {
+        flex: 1,
+        backgroundColor: "#F5F5F5",
     },
-    stepContainer: {
-        gap: 8,
+    containerDark: {
+        backgroundColor: "#151718",
+    },
+    scrollView: {
+        flex: 1,
+    },
+    scrollContent: {
+        padding: 20,
+    },
+    header: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
+        marginBottom: 24,
+        marginTop: 8,
+    },
+    greeting: {
+        fontSize: 28,
+        fontWeight: "bold",
+        color: "#1F2937",
+        marginBottom: 4,
+    },
+    greetingDark: {
+        color: "#ECEDEE",
+    },
+    subGreeting: {
+        fontSize: 16,
+        color: "#6B7280",
+    },
+    subGreetingDark: {
+        color: "#9BA1A6",
+    },
+    avatar: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: "#8B5CF6",
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    avatarText: {
+        fontSize: 20,
+        fontWeight: "bold",
+        color: "#FFFFFF",
+    },
+    progressCard: {
+        backgroundColor: "#8B5CF6",
+        borderRadius: 24,
+        padding: 28,
+        marginBottom: 20,
+        shadowColor: "#8B5CF6",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
+        elevation: 8,
+    },
+    progressHeader: {
+        marginBottom: 16,
+    },
+    progressLabel: {
+        fontSize: 13,
+        fontWeight: "600",
+        color: "rgba(255, 255, 255, 0.9)",
+        letterSpacing: 1,
+    },
+    scoreContainer: {
+        flexDirection: "row",
+        alignItems: "baseline",
         marginBottom: 8,
     },
-    reactLogo: {
-        height: 178,
-        width: 290,
-        bottom: 0,
-        left: 0,
-        position: "absolute",
+    scoreMain: {
+        fontSize: 72,
+        fontWeight: "bold",
+        color: "#FFFFFF",
+        lineHeight: 72,
+    },
+    scoreMax: {
+        fontSize: 36,
+        fontWeight: "600",
+        color: "rgba(255, 255, 255, 0.8)",
+        marginLeft: 4,
+    },
+    scoreChange: {
+        fontSize: 15,
+        color: "rgba(255, 255, 255, 0.9)",
+        marginBottom: 16,
+    },
+    encouragement: {
+        fontSize: 16,
+        color: "#FFFFFF",
+        marginBottom: 20,
+        lineHeight: 22,
+    },
+    streakBadge: {
+        backgroundColor: "rgba(255, 255, 255, 0.2)",
+        borderRadius: 20,
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        alignSelf: "flex-start",
+    },
+    streakText: {
+        fontSize: 15,
+        fontWeight: "600",
+        color: "#FFFFFF",
+    },
+    actionButtons: {
+        flexDirection: "row",
+        gap: 12,
+    },
+    actionButton: {
+        flex: 1,
+        borderRadius: 20,
+        padding: 24,
+        alignItems: "center",
+        justifyContent: "center",
+        minHeight: 140,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+        elevation: 4,
+    },
+    logMealButton: {
+        backgroundColor: "#10B981",
+        shadowColor: "#10B981",
+    },
+    quickWinButton: {
+        backgroundColor: "#3B82F6",
+        shadowColor: "#3B82F6",
+    },
+    actionIcon: {
+        fontSize: 36,
+        marginBottom: 12,
+    },
+    actionTitle: {
+        fontSize: 18,
+        fontWeight: "bold",
+        color: "#FFFFFF",
+        marginBottom: 4,
+    },
+    actionSubtitle: {
+        fontSize: 14,
+        color: "rgba(255, 255, 255, 0.9)",
     },
 });

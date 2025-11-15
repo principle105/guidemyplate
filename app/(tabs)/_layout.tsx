@@ -27,15 +27,37 @@ export default function TabLayout() {
                 }}
             />
             <Tabs.Screen
-                name="explore"
+                name="insights"
                 options={{
-                    title: "Explore",
+                    title: "Insights",
                     tabBarIcon: ({ color }) => (
                         <IconSymbol
                             size={28}
-                            name="paperplane.fill"
+                            name="lightbulb.fill"
                             color={color}
                         />
+                    ),
+                }}
+            />
+            <Tabs.Screen
+                name="log"
+                options={{
+                    title: "Log",
+                    tabBarIcon: ({ color }) => (
+                        <IconSymbol
+                            size={28}
+                            name="lightbulb.fill"
+                            color={color}
+                        />
+                    ),
+                }}
+            />
+            <Tabs.Screen
+                name="goals"
+                options={{
+                    title: "Goals",
+                    tabBarIcon: ({ color }) => (
+                        <IconSymbol size={28} name="target" color={color} />
                     ),
                 }}
             />
