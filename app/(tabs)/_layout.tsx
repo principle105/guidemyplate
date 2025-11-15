@@ -44,11 +44,7 @@ export default function TabLayout() {
                 options={{
                     title: "Log",
                     tabBarIcon: ({ color }) => (
-                        <IconSymbol
-                            size={28}
-                            name="lightbulb.fill"
-                            color={color}
-                        />
+                        <IconSymbol size={28} name="book.fill" color={color} />
                     ),
                 }}
             />

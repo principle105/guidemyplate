@@ -39,7 +39,13 @@ export default function HomeTab() {
 
     // What you're lacking today
     const nutritionGaps = [
-        { icon: "🥦", name: "Vegetables", current: 0, target: 3, unit: "servings" },
+        {
+            icon: "🥦",
+            name: "Vegetables",
+            current: 0,
+            target: 3,
+            unit: "servings",
+        },
         { icon: "💧", name: "Water", current: 3, target: 8, unit: "cups" },
         { icon: "🌾", name: "Fiber", current: 8, target: 25, unit: "g" },
     ];
@@ -80,9 +86,12 @@ export default function HomeTab() {
                         </Text>
                     </View>
                     <TouchableOpacity style={styles.weightBadge}>
-                        <Text style={styles.weightText}>{currentWeight} lbs</Text>
+                        <Text style={styles.weightText}>
+                            {currentWeight} lbs
+                        </Text>
                         <Text style={styles.weightChange}>
-                            {weeklyChange > 0 ? "+" : ""}{weeklyChange} this week
+                            {weeklyChange > 0 ? "+" : ""}
+                            {weeklyChange} this week
                         </Text>
                     </TouchableOpacity>
                 </View>
@@ -94,7 +103,9 @@ export default function HomeTab() {
                 >
                     <Text style={styles.primaryButtonIcon}>📸</Text>
                     <View style={styles.primaryButtonContent}>
-                        <Text style={styles.primaryButtonTitle}>Log Your Meal</Text>
+                        <Text style={styles.primaryButtonTitle}>
+                            Log Your Meal
+                        </Text>
                         <Text style={styles.primaryButtonSubtitle}>
                             Quick snap or manual entry
                         </Text>
@@ -110,33 +121,48 @@ export default function HomeTab() {
                             🔥 {streakDays} day streak
                         </Text>
                     </View>
-                    
+
                     <View style={styles.goalProgress}>
                         <View style={styles.goalNumbers}>
                             <View>
-                                <Text style={styles.goalCurrent}>{currentWeight}</Text>
+                                <Text style={styles.goalCurrent}>
+                                    {currentWeight}
+                                </Text>
                                 <Text style={styles.goalUnit}>Current</Text>
                             </View>
                             <Text style={styles.goalArrow}>→</Text>
                             <View>
-                                <Text style={styles.goalTarget}>{goalWeight}</Text>
+                                <Text style={styles.goalTarget}>
+                                    {goalWeight}
+                                </Text>
                                 <Text style={styles.goalUnit}>Goal</Text>
                             </View>
                         </View>
-                        
+
                         <View style={styles.progressBarContainer}>
-                            <View style={[styles.progressBarFill, { width: "60%" }]} />
+                            <View
+                                style={[
+                                    styles.progressBarFill,
+                                    { width: "60%" },
+                                ]}
+                            />
                         </View>
-                        
+
                         <Text style={styles.goalRemaining}>
-                            {currentWeight - goalWeight} lbs to go • You're 60% there! 💪
+                            {currentWeight - goalWeight} lbs to go • You're 60%
+                            there! 💪
                         </Text>
                     </View>
                 </View>
 
                 {/* Today's Insights - What's affecting your weight */}
                 <View style={styles.sectionHeader}>
-                    <Text style={[styles.sectionTitle, isDark && styles.sectionTitleDark]}>
+                    <Text
+                        style={[
+                            styles.sectionTitle,
+                            isDark && styles.sectionTitleDark,
+                        ]}
+                    >
                         🎯 Today's Insights
                     </Text>
                 </View>
@@ -153,14 +179,26 @@ export default function HomeTab() {
                     >
                         <Text style={styles.insightIcon}>{insight.icon}</Text>
                         <View style={styles.insightContent}>
-                            <Text style={[styles.insightTitle, isDark && styles.insightTitleDark]}>
+                            <Text
+                                style={[
+                                    styles.insightTitle,
+                                    isDark && styles.insightTitleDark,
+                                ]}
+                            >
                                 {insight.title}
                             </Text>
-                            <Text style={[styles.insightMessage, isDark && styles.insightMessageDark]}>
+                            <Text
+                                style={[
+                                    styles.insightMessage,
+                                    isDark && styles.insightMessageDark,
+                                ]}
+                            >
                                 {insight.message}
                             </Text>
                             {insight.action && (
-                                <TouchableOpacity style={styles.insightActionButton}>
+                                <TouchableOpacity
+                                    style={styles.insightActionButton}
+                                >
                                     <Text style={styles.insightActionText}>
                                         ✓ {insight.action}
                                     </Text>
@@ -172,7 +210,12 @@ export default function HomeTab() {
 
                 {/* What You're Lacking */}
                 <View style={styles.sectionHeader}>
-                    <Text style={[styles.sectionTitle, isDark && styles.sectionTitleDark]}>
+                    <Text
+                        style={[
+                            styles.sectionTitle,
+                            isDark && styles.sectionTitleDark,
+                        ]}
+                    >
                         🥗 What You're Missing Today
                     </Text>
                 </View>
@@ -182,7 +225,12 @@ export default function HomeTab() {
                         <View key={index} style={styles.gapItem}>
                             <Text style={styles.gapIcon}>{gap.icon}</Text>
                             <View style={styles.gapContent}>
-                                <Text style={[styles.gapName, isDark && styles.gapNameDark]}>
+                                <Text
+                                    style={[
+                                        styles.gapName,
+                                        isDark && styles.gapNameDark,
+                                    ]}
+                                >
                                     {gap.name}
                                 </Text>
                                 <View style={styles.gapProgressBar}>
@@ -194,14 +242,20 @@ export default function HomeTab() {
                                                 backgroundColor:
                                                     gap.current >= gap.target
                                                         ? "#10B981"
-                                                        : gap.current >= gap.target * 0.5
-                                                        ? "#F59E0B"
-                                                        : "#EF4444",
+                                                        : gap.current >=
+                                                            gap.target * 0.5
+                                                          ? "#F59E0B"
+                                                          : "#EF4444",
                                             },
                                         ]}
                                     />
                                 </View>
-                                <Text style={[styles.gapNumbers, isDark && styles.gapNumbersDark]}>
+                                <Text
+                                    style={[
+                                        styles.gapNumbers,
+                                        isDark && styles.gapNumbersDark,
+                                    ]}
+                                >
                                     {gap.current}/{gap.target} {gap.unit}
                                 </Text>
                             </View>
@@ -210,13 +264,28 @@ export default function HomeTab() {
                 </View>
 
                 {/* Pattern Insight */}
-                <View style={[styles.patternCard, isDark && styles.patternCardDark]}>
+                <View
+                    style={[
+                        styles.patternCard,
+                        isDark && styles.patternCardDark,
+                    ]}
+                >
                     <Text style={styles.patternIcon}>🧠</Text>
                     <View style={styles.patternContent}>
-                        <Text style={[styles.patternTitle, isDark && styles.patternTitleDark]}>
+                        <Text
+                            style={[
+                                styles.patternTitle,
+                                isDark && styles.patternTitleDark,
+                            ]}
+                        >
                             Your Pattern
                         </Text>
-                        <Text style={[styles.patternMessage, isDark && styles.patternMessageDark]}>
+                        <Text
+                            style={[
+                                styles.patternMessage,
+                                isDark && styles.patternMessageDark,
+                            ]}
+                        >
                             {patternInsight.message}
                         </Text>
                         <Text style={styles.patternConfidence}>
@@ -227,7 +296,12 @@ export default function HomeTab() {
 
                 {/* Quick Actions Grid */}
                 <View style={styles.sectionHeader}>
-                    <Text style={[styles.sectionTitle, isDark && styles.sectionTitleDark]}>
+                    <Text
+                        style={[
+                            styles.sectionTitle,
+                            isDark && styles.sectionTitleDark,
+                        ]}
+                    >
                         ⚡ Quick Actions
                     </Text>
                 </View>
@@ -246,7 +320,9 @@ export default function HomeTab() {
                         activeOpacity={0.8}
                     >
                         <Text style={styles.actionCardIcon}>🍽️</Text>
-                        <Text style={styles.actionCardTitle}>Healthy Spots</Text>
+                        <Text style={styles.actionCardTitle}>
+                            Healthy Spots
+                        </Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
