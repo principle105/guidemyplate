@@ -49,6 +49,11 @@ const milestones: Milestone[] = [
 export default function GoalsTab() {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === "dark";
+    
+    const [currentWeight, setCurrentWeight] = useState(0);
+    const [goalWeight, setGoalWeight] = useState(0);
+    const [startingWeight, setStartingWeight] = useState(0);
+    const [dataLoaded, setDataLoaded] = useState(false);
 
     // Simple local tracking of completed days for each habit (0–7)
     const [habitProgress, setHabitProgress] = useState<Record<string, number>>({
@@ -56,6 +61,40 @@ export default function GoalsTab() {
         water: 3,
         no_takeout: 1,
     });
+    
+    useEffect(() => {
+        loadWeightData();
+    }, []);
+    
+    const loadWeightData = async () => {
+        try {
+            const surveyData = await AsyncStorage.getItem("surveyData");
+            if (surveyData) {
+                const parsed = JSON.parse(surveyData);
+                const surveyStartWeight = Number(parsed.currentWeight) || 0;
+                
+                setStartingWeight(surveyStartWeight);
+                setGoalWeight(Number(parsed.goalWeight) || 0);
+                
+                // Check for most recent weight log
+                const weightHistory = await AsyncStorage.getItem("weightHistory");
+                if (weightHistory) {
+                    const history = JSON.parse(weightHistory);
+                    if (history.length > 0) {
+                        setCurrentWeight(history[0].weight);
+                    } else {
+                        setCurrentWeight(surveyStartWeight);
+                    }
+                } else {
+                    setCurrentWeight(surveyStartWeight);
+                }
+            }
+            setDataLoaded(true);
+        } catch (error) {
+            console.error("Error loading weight data:", error);
+            setDataLoaded(true);
+        }
+    };
 
     const toggleHabitDay = (habitId: string) => {
         setHabitProgress((prev) => {
@@ -155,7 +194,7 @@ export default function GoalsTab() {
                                         isDark && styles.weightValueDark,
                                     ]}
                                 >
-                                    185
+                                    {dataLoaded ? currentWeight || '—' : '...'}
                                 </ThemedText>
                                 <ThemedText
                                     style={[
@@ -176,7 +215,7 @@ export default function GoalsTab() {
                             </ThemedText>
                             <View style={styles.weightBlock}>
                                 <ThemedText style={styles.weightTargetValue}>
-                                    165
+                                    {dataLoaded ? goalWeight || '—' : '...'}
                                 </ThemedText>
                                 <ThemedText
                                     style={[
@@ -190,7 +229,9 @@ export default function GoalsTab() {
                         </View>
 
                         {renderProgressBar(
-                            0.4,
+                            dataLoaded && startingWeight > goalWeight 
+                                ? Math.min(1, Math.max(0, (startingWeight - currentWeight) / (startingWeight - goalWeight)))
+                                : 0,
                             isDark ? "#1F2933" : "#E5E7EB",
                             "#10B981",
                         )}
@@ -201,7 +242,9 @@ export default function GoalsTab() {
                                 isDark && styles.goalSummaryDark,
                             ]}
                         >
-                            20 lbs to lose • On pace to hit goal in ~4 months
+                            {dataLoaded && currentWeight > 0 && goalWeight > 0 
+                                ? `${Math.max(0, currentWeight - goalWeight).toFixed(1)} lbs to lose • ${(Math.max(0, startingWeight - currentWeight) / Math.max(1, startingWeight - goalWeight) * 100).toFixed(0)}% there`
+                                : 'Loading your progress...'}
                         </ThemedText>
                     </View>
 

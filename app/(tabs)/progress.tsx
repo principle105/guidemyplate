@@ -340,99 +340,45 @@ export default function ProgressTab() {
                     )}
                 </View>
 
-                {/* Personalized Challenge Tracker */}
-                <View style={styles.card}>
-                    <Text style={styles.cardTitle}>
-                        🎯 Your Personal Challenge: {surveyData?.biggestChallenge || 'Building Healthy Habits'}
+                {/* AI Food Analyzer Feature */}
+                <TouchableOpacity 
+                    style={styles.aiAnalyzerCard}
+                    onPress={() => {
+                        const router = require('expo-router');
+                        router.router.push("/ai-food-analyzer");
+                    }}
+                    activeOpacity={0.8}
+                >
+                    <View style={styles.aiHeader}>
+                        <Text style={styles.aiIcon}>📸</Text>
+                        <View style={styles.aiBadge}>
+                            <Text style={styles.aiBadgeText}>NEW</Text>
+                        </View>
+                    </View>
+                    <Text style={styles.aiTitle}>AI Food Photo Analyzer</Text>
+                    <Text style={styles.aiSubtitle}>
+                        Snap a photo → Get health score → Learn how to fix it
                     </Text>
                     
-                    {/* Challenge-specific insights and actions */}
-                    <View style={styles.challengeContent}>
-                        {surveyData?.biggestChallenge === "Late-night snacking" && (
-                            <>
-                                <Text style={styles.challengeDescription}>
-                                    Track your evening habits to break the late-night snacking cycle
-                                </Text>
-                                <View style={styles.challengeActions}>
-                                    <View style={styles.challengeAction}>
-                                        <Text style={styles.actionIcon}>🌙</Text>
-                                        <Text style={styles.actionText}>Set kitchen closed time: 8pm</Text>
-                                        <Text style={styles.actionStatus}>Not set</Text>
-                                    </View>
-                                    <View style={styles.challengeAction}>
-                                        <Text style={styles.actionIcon}>☕</Text>
-                                        <Text style={styles.actionText}>Evening herbal tea routine</Text>
-                                        <Text style={styles.actionStatus}>0/7 days</Text>
-                                    </View>
-                                </View>
-                            </>
-                        )}
-                        
-                        {surveyData?.biggestChallenge === "Not feeling full" && (
-                            <>
-                                <Text style={styles.challengeDescription}>
-                                    Focus on protein and fiber to increase satiety
-                                </Text>
-                                <View style={styles.challengeActions}>
-                                    <View style={styles.challengeAction}>
-                                        <Text style={styles.actionIcon}>🥩</Text>
-                                        <Text style={styles.actionText}>Protein at every meal</Text>
-                                        <Text style={styles.actionStatus}>0/21 meals</Text>
-                                    </View>
-                                    <View style={styles.challengeAction}>
-                                        <Text style={styles.actionIcon}>🥬</Text>
-                                        <Text style={styles.actionText}>2+ servings vegetables daily</Text>
-                                        <Text style={styles.actionStatus}>0/7 days</Text>
-                                    </View>
-                                </View>
-                            </>
-                        )}
-                        
-                        {surveyData?.biggestChallenge === "Eating when stressed/bored" && (
-                            <>
-                                <Text style={styles.challengeDescription}>
-                                    Build alternative responses to stress and boredom
-                                </Text>
-                                <View style={styles.challengeActions}>
-                                    <View style={styles.challengeAction}>
-                                        <Text style={styles.actionIcon}>🚶</Text>
-                                        <Text style={styles.actionText}>5-min walk instead of snacking</Text>
-                                        <Text style={styles.actionStatus}>0 walks</Text>
-                                    </View>
-                                    <View style={styles.challengeAction}>
-                                        <Text style={styles.actionIcon}>📝</Text>
-                                        <Text style={styles.actionText}>Journal feelings before eating</Text>
-                                        <Text style={styles.actionStatus}>0 entries</Text>
-                                    </View>
-                                </View>
-                            </>
-                        )}
-                        
-                        {(!surveyData?.biggestChallenge || !["Late-night snacking", "Not feeling full", "Eating when stressed/bored"].includes(surveyData.biggestChallenge)) && (
-                            <>
-                                <Text style={styles.challengeDescription}>
-                                    Building consistent healthy habits one step at a time
-                                </Text>
-                                <View style={styles.challengeActions}>
-                                    <View style={styles.challengeAction}>
-                                        <Text style={styles.actionIcon}>💧</Text>
-                                        <Text style={styles.actionText}>Drink 8 glasses of water daily</Text>
-                                        <Text style={styles.actionStatus}>0/7 days</Text>
-                                    </View>
-                                    <View style={styles.challengeAction}>
-                                        <Text style={styles.actionIcon}>🥗</Text>
-                                        <Text style={styles.actionText}>Log all meals consistently</Text>
-                                        <Text style={styles.actionStatus}>0/7 days</Text>
-                                    </View>
-                                </View>
-                            </>
-                        )}
-                        
-                        <Text style={styles.challengeTip}>
-                            💡 Complete daily goals to track progress with your specific challenge
-                        </Text>
+                    <View style={styles.aiFeatures}>
+                        <View style={styles.aiFeature}>
+                            <Text style={styles.aiFeatureIcon}>📸</Text>
+                            <Text style={styles.aiFeatureText}>Detect foods</Text>
+                        </View>
+                        <View style={styles.aiFeature}>
+                            <Text style={styles.aiFeatureIcon}>💯</Text>
+                            <Text style={styles.aiFeatureText}>Health score</Text>
+                        </View>
+                        <View style={styles.aiFeature}>
+                            <Text style={styles.aiFeatureIcon}>🔄</Text>
+                            <Text style={styles.aiFeatureText}>Smart swaps</Text>
+                        </View>
                     </View>
-                </View>
+                    
+                    <View style={styles.aiButton}>
+                        <Text style={styles.aiButtonText}>Try AI Analyzer →</Text>
+                    </View>
+                </TouchableOpacity>
 
                 {/* Dynamic Motivational Insights */}
                 {motivationInsights.map((insight, index) => (
@@ -855,5 +801,80 @@ const styles = StyleSheet.create({
         padding: 12,
         backgroundColor: "#374151",
         borderRadius: 8,
+    },
+    
+    // AI Analyzer Card Styles
+    aiAnalyzerCard: {
+        backgroundColor: "#7C3AED",
+        borderRadius: 20,
+        padding: 24,
+        marginBottom: 16,
+        shadowColor: "#7C3AED",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
+        elevation: 6,
+    },
+    aiHeader: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 16,
+    },
+    aiIcon: {
+        fontSize: 48,
+    },
+    aiBadge: {
+        backgroundColor: "#10B981",
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 12,
+    },
+    aiBadgeText: {
+        fontSize: 12,
+        fontWeight: "700",
+        color: "#FFFFFF",
+    },
+    aiTitle: {
+        fontSize: 24,
+        fontWeight: "700",
+        color: "#FFFFFF",
+        marginBottom: 8,
+    },
+    aiSubtitle: {
+        fontSize: 16,
+        color: "#E9D5FF",
+        marginBottom: 20,
+        lineHeight: 22,
+    },
+    aiFeatures: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        marginBottom: 20,
+    },
+    aiFeature: {
+        alignItems: "center",
+        flex: 1,
+    },
+    aiFeatureIcon: {
+        fontSize: 28,
+        marginBottom: 8,
+    },
+    aiFeatureText: {
+        fontSize: 12,
+        color: "#E9D5FF",
+        fontWeight: "600",
+        textAlign: "center",
+    },
+    aiButton: {
+        backgroundColor: "#FFFFFF",
+        borderRadius: 12,
+        padding: 14,
+        alignItems: "center",
+    },
+    aiButtonText: {
+        fontSize: 16,
+        fontWeight: "700",
+        color: "#7C3AED",
     },
 });

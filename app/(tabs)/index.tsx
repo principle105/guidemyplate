@@ -1117,109 +1117,6 @@ export default function HomeTab() {
                 </View>
 
                 <View style={styles.actionGrid}>
-                    {/* Dynamic actions based on user's biggest challenge */}
-                    {surveyData?.biggestChallenge === "Late-night snacking" && (
-                        <>
-                            <TouchableOpacity
-                                style={[styles.actionCard, styles.actionCardEvening]}
-                                activeOpacity={0.8}
-                                onPress={() => {
-                                    Alert.alert(
-                                        "Evening Success Kit 🌙",
-                                        "• Set kitchen closed time at 8pm\n• Prep herbal tea for cravings\n• Plan non-food evening activity\n• Brush teeth after dinner",
-                                        [{ text: "Got it!", style: "default" }]
-                                    );
-                                }}
-                            >
-                                <Text style={styles.actionCardIcon}>🌙</Text>
-                                <Text style={styles.actionCardTitle}>Evening Kit</Text>
-                            </TouchableOpacity>
-                            
-                            <TouchableOpacity
-                                style={[styles.actionCard, styles.actionCardCraving]}
-                                activeOpacity={0.8}
-                                onPress={() => {
-                                    Alert.alert(
-                                        "Craving Emergency 🚨",
-                                        "Before you eat, try:\n• Drink a full glass of water\n• Wait 10 minutes\n• Do 5 deep breaths\n• Ask: Am I actually hungry?",
-                                        [{ text: "I'll try this", style: "default" }]
-                                    );
-                                }}
-                            >
-                                <Text style={styles.actionCardIcon}>🚨</Text>
-                                <Text style={styles.actionCardTitle}>Craving SOS</Text>
-                            </TouchableOpacity>
-                        </>
-                    )}
-                    
-                    {surveyData?.biggestChallenge === "Not feeling full" && (
-                        <>
-                            <TouchableOpacity
-                                style={[styles.actionCard, styles.actionCardSatiety]}
-                                activeOpacity={0.8}
-                                onPress={() => {
-                                    Alert.alert(
-                                        "Fullness Boosters 🍽️",
-                                        "Add these to your next meal:\n• 20g protein (size of palm)\n• 2 cups vegetables\n• 1 tbsp healthy fat\n• Eat slowly, put fork down",
-                                        [{ text: "Will do!", style: "default" }]
-                                    );
-                                }}
-                            >
-                                <Text style={styles.actionCardIcon}>🍽️</Text>
-                                <Text style={styles.actionCardTitle}>Fullness Tips</Text>
-                            </TouchableOpacity>
-                            
-                            <TouchableOpacity
-                                style={[styles.actionCard, styles.actionCardMindful]}
-                                activeOpacity={0.8}
-                                onPress={() => {
-                                    Alert.alert(
-                                        "Mindful Eating 🧘‍♀️",
-                                        "Try this at your next meal:\n• Put phone away\n• Chew each bite 15 times\n• Check hunger halfway through\n• Stop when 80% full",
-                                        [{ text: "I'll practice this", style: "default" }]
-                                    );
-                                }}
-                            >
-                                <Text style={styles.actionCardIcon}>🧘‍♀️</Text>
-                                <Text style={styles.actionCardTitle}>Mindful Eating</Text>
-                            </TouchableOpacity>
-                        </>
-                    )}
-                    
-                    {surveyData?.biggestChallenge === "Eating when stressed/bored" && (
-                        <>
-                            <TouchableOpacity
-                                style={[styles.actionCard, styles.actionCardStress]}
-                                activeOpacity={0.8}
-                                onPress={() => {
-                                    Alert.alert(
-                                        "Stress Relief Toolkit 🧠",
-                                        "Instead of eating, try:\n• 5-minute walk\n• Call a friend\n• Deep breathing (4-7-8)\n• Journal 3 sentences",
-                                        [{ text: "Great ideas!", style: "default" }]
-                                    );
-                                }}
-                            >
-                                <Text style={styles.actionCardIcon}>🧠</Text>
-                                <Text style={styles.actionCardTitle}>Stress Relief</Text>
-                            </TouchableOpacity>
-                            
-                            <TouchableOpacity
-                                style={[styles.actionCard, styles.actionCardBoredom]}
-                                activeOpacity={0.8}
-                                onPress={() => {
-                                    Alert.alert(
-                                        "Boredom Busters 🎯",
-                                        "Keep hands busy with:\n• Adult coloring book\n• Knitting or crafts\n• Organize one drawer\n• Text a friend",
-                                        [{ text: "Perfect!", style: "default" }]
-                                    );
-                                }}
-                            >
-                                <Text style={styles.actionCardIcon}>🎯</Text>
-                                <Text style={styles.actionCardTitle}>Boredom Fix</Text>
-                            </TouchableOpacity>
-                        </>
-                    )}
-                    
                     {/* Universal helpful actions */}
                     <TouchableOpacity
                         style={[styles.actionCard, styles.actionCardRestaurant]}
@@ -1252,6 +1149,16 @@ export default function HomeTab() {
                     >
                         <Text style={styles.actionCardIcon}>🔔</Text>
                         <Text style={styles.actionCardTitle}>Notifications</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.actionCard, styles.actionCardRoulette]}
+                        activeOpacity={0.8}
+                        onPress={() => router.push("/snack-roulette")}
+                    >
+                        <Text style={styles.actionCardIcon}>🎲</Text>
+                        <Text style={styles.actionCardTitle}>Snack Roulette</Text>
+                        <Text style={styles.actionCardSubtitle}>Shake for ideas!</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -1637,6 +1544,9 @@ const styles = StyleSheet.create({
     actionCardNotifications: {
         backgroundColor: "#E0E7FF",
     },
+    actionCardRoulette: {
+        backgroundColor: "#FEF3C7",
+    },
     actionCardIcon: {
         fontSize: 40,
         marginBottom: 12,
@@ -1646,6 +1556,12 @@ const styles = StyleSheet.create({
         fontWeight: "700",
         color: "#1F2937",
         textAlign: "center",
+    },
+    actionCardSubtitle: {
+        fontSize: 11,
+        color: "#6B7280",
+        textAlign: "center",
+        marginTop: 4,
     },
     notificationButton: {
         backgroundColor: "#374151",

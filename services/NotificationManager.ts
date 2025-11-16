@@ -2,18 +2,25 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
-// Configure how notifications are handled when app is in foreground
-Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-        shouldShowBanner: true,
-        shouldShowList: true,
-        shouldPlaySound: true,
-        shouldSetBadge: true,
-    }),
-});
+// Configure how notifications are handled when app is in foreground (skip on web)
+if (Platform.OS !== 'web') {
+    Notifications.setNotificationHandler({
+        handleNotification: async () => ({
+            shouldShowBanner: true,
+            shouldShowList: true,
+            shouldPlaySound: true,
+            shouldSetBadge: true,
+        }),
+    });
+}
 
 class NotificationManager {
     static async requestPermissions(): Promise<boolean> {
+        // Skip notifications on web
+        if (Platform.OS === 'web') {
+            return false;
+        }
+
         const { status: existingStatus } = await Notifications.getPermissionsAsync();
         let finalStatus = existingStatus;
 
