@@ -1,13 +1,188 @@
-import { SafeAreaView, ScrollView, StyleSheet, View } from "react-native";
+import React, { useState } from "react";
+import {
+    Pressable,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    View,
+} from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Fonts } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 
+type InsightItem = {
+    icon: string;
+    label: string;
+    amount: string;
+};
+
+type InsightCard = {
+    id: string;
+    title: string;
+    percentLabel: string;
+    type: "high" | "low";
+    subtitle: string;
+    items: InsightItem[];
+};
+
+// 🚨 Things to Watch (high / risky patterns)
+const thingsToWatch: InsightCard[] = [
+    {
+        id: "high-added-sugar",
+        title: "High Added Sugar",
+        percentLabel: "200%",
+        type: "high",
+        subtitle: "Top contributors",
+        items: [
+            { icon: "🥤", label: "Coke Zero", amount: "80g" },
+            { icon: "🧁", label: "Cupcakes", amount: "200g" },
+        ],
+    },
+    {
+        id: "high-sat-fat",
+        title: "High Saturated Fats",
+        percentLabel: "200%",
+        type: "high",
+        subtitle: "Top contributors",
+        items: [
+            { icon: "🍔", label: "Burger", amount: "150g" },
+            { icon: "🧈", label: "Butter", amount: "50g" },
+        ],
+    },
+];
+
+// 🧩 Gaps to Fill (low nutrients / foods to add)
+const gapsToFill: InsightCard[] = [
+    {
+        id: "low-vitamin-d",
+        title: "Low Vitamin D",
+        percentLabel: "10%",
+        type: "low",
+        subtitle: "Foods to add",
+        items: [
+            { icon: "🐟", label: "Salmon", amount: "100g" },
+            { icon: "🥚", label: "Egg yolks", amount: "2 eggs" },
+        ],
+    },
+];
+
 export default function InsightsTab() {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === "dark";
+
+    // Track which accordions are open, by id
+    const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+
+    const toggleCard = (id: string) => {
+        setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
+    };
+
+    const renderInsightCard = (card: InsightCard) => {
+        const isExpanded = !!expanded[card.id];
+
+        const containerStyle = [
+            styles.insightCard,
+            card.type === "high" && styles.insightHigh,
+            card.type === "low" && styles.insightLow,
+            isDark &&
+                (card.type === "high"
+                    ? styles.insightCardDark
+                    : styles.insightCardDarkLow),
+        ];
+
+        const isHigh = card.type === "high";
+
+        return (
+            <View key={card.id} style={containerStyle}>
+                {/* Header (accordion toggle) */}
+                <Pressable
+                    onPress={() => toggleCard(card.id)}
+                    style={styles.cardHeader}
+                >
+                    <View style={styles.checkboxRow}>
+                        <View
+                            style={[
+                                styles.checkbox,
+                                isHigh
+                                    ? styles.highCheckbox
+                                    : styles.lowCheckbox,
+                            ]}
+                        />
+                        <View style={styles.headerTextContainer}>
+                            <View style={{ flex: 1 }}>
+                                <ThemedText
+                                    type="defaultSemiBold"
+                                    style={[
+                                        styles.cardTitle,
+                                        isDark && styles.cardTitleDark,
+                                    ]}
+                                >
+                                    {card.title}
+                                </ThemedText>
+                            </View>
+
+                            <View
+                                style={[
+                                    styles.badge,
+                                    isHigh ? styles.highBadge : styles.lowBadge,
+                                ]}
+                            >
+                                <ThemedText style={styles.badgeText}>
+                                    {card.percentLabel}
+                                </ThemedText>
+                            </View>
+
+                            <ThemedText
+                                style={[
+                                    styles.chevron,
+                                    isDark && styles.chevronDark,
+                                ]}
+                            >
+                                {isExpanded ? "˄" : "˅"}
+                            </ThemedText>
+                        </View>
+                    </View>
+                </Pressable>
+
+                {/* Accordion content */}
+                {isExpanded && (
+                    <>
+                        <ThemedText
+                            style={[
+                                styles.subtitle,
+                                isDark && styles.subtitleDark,
+                            ]}
+                        >
+                            {card.subtitle}
+                        </ThemedText>
+
+                        {card.items.map((item) => (
+                            <View key={item.label} style={styles.itemContainer}>
+                                <ThemedText
+                                    style={[
+                                        styles.item,
+                                        isDark && styles.itemDark,
+                                    ]}
+                                >
+                                    {item.icon} {item.label}
+                                </ThemedText>
+                                <ThemedText
+                                    style={[
+                                        styles.itemAmount,
+                                        isDark && styles.itemAmountDark,
+                                    ]}
+                                >
+                                    {item.amount}
+                                </ThemedText>
+                            </View>
+                        ))}
+                    </>
+                )}
+            </View>
+        );
+    };
 
     return (
         <SafeAreaView
@@ -56,163 +231,7 @@ export default function InsightsTab() {
                         </ThemedText>
                     </View>
 
-                    {/* High Added Sugar Card */}
-                    <View
-                        style={[
-                            styles.insightCard,
-                            styles.insightHigh,
-                            isDark && styles.insightCardDark,
-                        ]}
-                    >
-                        <View style={styles.cardHeader}>
-                            <View style={styles.checkboxRow}>
-                                <View
-                                    style={[
-                                        styles.checkbox,
-                                        styles.highCheckbox,
-                                    ]}
-                                />
-                                <View style={styles.headerTextContainer}>
-                                    <ThemedText
-                                        type="defaultSemiBold"
-                                        style={[
-                                            styles.cardTitle,
-                                            isDark && styles.cardTitleDark,
-                                        ]}
-                                    >
-                                        High Added Sugar
-                                    </ThemedText>
-                                    <View
-                                        style={[styles.badge, styles.highBadge]}
-                                    >
-                                        <ThemedText style={styles.badgeText}>
-                                            200%
-                                        </ThemedText>
-                                    </View>
-                                </View>
-                            </View>
-                        </View>
-
-                        <ThemedText
-                            style={[
-                                styles.subtitle,
-                                isDark && styles.subtitleDark,
-                            ]}
-                        >
-                            Top contributors
-                        </ThemedText>
-
-                        <View style={styles.itemContainer}>
-                            <ThemedText
-                                style={[styles.item, isDark && styles.itemDark]}
-                            >
-                                🥤 Coke Zero
-                            </ThemedText>
-                            <ThemedText
-                                style={[
-                                    styles.itemAmount,
-                                    isDark && styles.itemAmountDark,
-                                ]}
-                            >
-                                80g
-                            </ThemedText>
-                        </View>
-
-                        <View style={styles.itemContainer}>
-                            <ThemedText
-                                style={[styles.item, isDark && styles.itemDark]}
-                            >
-                                🧁 Cupcakes
-                            </ThemedText>
-                            <ThemedText
-                                style={[
-                                    styles.itemAmount,
-                                    isDark && styles.itemAmountDark,
-                                ]}
-                            >
-                                200g
-                            </ThemedText>
-                        </View>
-                    </View>
-
-                    {/* High Saturated Fat Card */}
-                    <View
-                        style={[
-                            styles.insightCard,
-                            styles.insightHigh,
-                            isDark && styles.insightCardDark,
-                        ]}
-                    >
-                        <View style={styles.cardHeader}>
-                            <View style={styles.checkboxRow}>
-                                <View
-                                    style={[
-                                        styles.checkbox,
-                                        styles.highCheckbox,
-                                    ]}
-                                />
-                                <View style={styles.headerTextContainer}>
-                                    <ThemedText
-                                        type="defaultSemiBold"
-                                        style={[
-                                            styles.cardTitle,
-                                            isDark && styles.cardTitleDark,
-                                        ]}
-                                    >
-                                        High Saturated Fats
-                                    </ThemedText>
-                                    <View
-                                        style={[styles.badge, styles.highBadge]}
-                                    >
-                                        <ThemedText style={styles.badgeText}>
-                                            200%
-                                        </ThemedText>
-                                    </View>
-                                </View>
-                            </View>
-                        </View>
-
-                        <ThemedText
-                            style={[
-                                styles.subtitle,
-                                isDark && styles.subtitleDark,
-                            ]}
-                        >
-                            Top contributors
-                        </ThemedText>
-
-                        <View style={styles.itemContainer}>
-                            <ThemedText
-                                style={[styles.item, isDark && styles.itemDark]}
-                            >
-                                🍔 Burger
-                            </ThemedText>
-                            <ThemedText
-                                style={[
-                                    styles.itemAmount,
-                                    isDark && styles.itemAmountDark,
-                                ]}
-                            >
-                                150g
-                            </ThemedText>
-                        </View>
-
-                        <View style={styles.itemContainer}>
-                            <ThemedText
-                                style={[styles.item, isDark && styles.itemDark]}
-                            >
-                                🧈 Butter
-                            </ThemedText>
-                            <ThemedText
-                                style={[
-                                    styles.itemAmount,
-                                    isDark && styles.itemAmountDark,
-                                ]}
-                            >
-                                50g
-                            </ThemedText>
-                        </View>
-                    </View>
+                    {thingsToWatch.map(renderInsightCard)}
 
                     {/* Low Nutrient Section */}
                     <View style={styles.sectionHeader}>
@@ -226,85 +245,7 @@ export default function InsightsTab() {
                         </ThemedText>
                     </View>
 
-                    {/* Low Vitamin D Card */}
-                    <View
-                        style={[
-                            styles.insightCard,
-                            styles.insightLow,
-                            isDark && styles.insightCardDarkLow,
-                        ]}
-                    >
-                        <View style={styles.cardHeader}>
-                            <View style={styles.checkboxRow}>
-                                <View
-                                    style={[
-                                        styles.checkbox,
-                                        styles.lowCheckbox,
-                                    ]}
-                                />
-                                <View style={styles.headerTextContainer}>
-                                    <ThemedText
-                                        type="defaultSemiBold"
-                                        style={[
-                                            styles.cardTitle,
-                                            isDark && styles.cardTitleDark,
-                                        ]}
-                                    >
-                                        Low Vitamin D
-                                    </ThemedText>
-
-                                    <View
-                                        style={[styles.badge, styles.lowBadge]}
-                                    >
-                                        <ThemedText style={styles.badgeText}>
-                                            10%
-                                        </ThemedText>
-                                    </View>
-                                </View>
-                            </View>
-                        </View>
-
-                        <ThemedText
-                            style={[
-                                styles.subtitle,
-                                isDark && styles.subtitleDark,
-                            ]}
-                        >
-                            Foods to add
-                        </ThemedText>
-
-                        <View style={styles.itemContainer}>
-                            <ThemedText
-                                style={[styles.item, isDark && styles.itemDark]}
-                            >
-                                🐟 Salmon
-                            </ThemedText>
-                            <ThemedText
-                                style={[
-                                    styles.itemAmount,
-                                    isDark && styles.itemAmountDark,
-                                ]}
-                            >
-                                100g
-                            </ThemedText>
-                        </View>
-
-                        <View style={styles.itemContainer}>
-                            <ThemedText
-                                style={[styles.item, isDark && styles.itemDark]}
-                            >
-                                🥚 Egg yolks
-                            </ThemedText>
-                            <ThemedText
-                                style={[
-                                    styles.itemAmount,
-                                    isDark && styles.itemAmountDark,
-                                ]}
-                            >
-                                2 eggs
-                            </ThemedText>
-                        </View>
-                    </View>
+                    {gapsToFill.map(renderInsightCard)}
 
                     {/* Bottom spacing */}
                     <View style={{ height: 40 }} />
@@ -395,7 +336,7 @@ const styles = StyleSheet.create({
         backgroundColor: "#EEF2FF",
     },
     cardHeader: {
-        marginBottom: 12,
+        marginBottom: 4,
     },
     checkboxRow: {
         flexDirection: "row",
@@ -422,7 +363,7 @@ const styles = StyleSheet.create({
         flex: 1,
         flexDirection: "row",
         justifyContent: "space-between",
-        alignItems: "flex-start",
+        alignItems: "center",
         gap: 8,
     },
     cardTitle: {
@@ -452,8 +393,17 @@ const styles = StyleSheet.create({
         color: "#111827",
         fontWeight: "700",
     },
+    chevron: {
+        fontSize: 16,
+        color: "#6B7280",
+        marginLeft: 4,
+    },
+    chevronDark: {
+        color: "#D1D5DB",
+    },
     subtitle: {
         fontSize: 13,
+        marginTop: 8,
         marginBottom: 8,
         fontWeight: "600",
         textTransform: "uppercase",
