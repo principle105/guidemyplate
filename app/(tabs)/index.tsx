@@ -1117,7 +1117,77 @@ export default function HomeTab() {
                 </View>
 
                 <View style={styles.actionGrid}>
-                    {/* Universal helpful actions */}
+                    {/* AI-Powered Features */}
+                    <TouchableOpacity
+                        style={[styles.actionCard, styles.actionCardCraving]}
+                        activeOpacity={0.8}
+                        onPress={() => router.push("/craving-predictor")}
+                    >
+                        <Text style={styles.actionCardIcon}>🔮</Text>
+                        <Text style={styles.actionCardTitle}>AI Craving Predictor</Text>
+                        <Text style={styles.actionCardSubtitle}>Predict before it hits!</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.actionCard, styles.actionCardSatiety]}
+                        activeOpacity={0.8}
+                        onPress={() => router.push("/satiety-tracker")}
+                    >
+                        <Text style={styles.actionCardIcon}>🎯</Text>
+                        <Text style={styles.actionCardTitle}>Satiety Score™</Text>
+                        <Text style={styles.actionCardSubtitle}>What keeps YOU full?</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.actionCard, styles.actionCardThirst]}
+                        activeOpacity={0.8}
+                        onPress={() => router.push("/hunger-thirst")}
+                    >
+                        <Text style={styles.actionCardIcon}>💧</Text>
+                        <Text style={styles.actionCardTitle}>Hunger vs Thirst</Text>
+                        <Text style={styles.actionCardSubtitle}>Save 300 cal/day</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.actionCard, styles.actionCardEnergy]}
+                        activeOpacity={0.8}
+                        onPress={() => router.push("/energy-tracker")}
+                    >
+                        <Text style={styles.actionCardIcon}>⚡</Text>
+                        <Text style={styles.actionCardTitle}>Energy Tracker</Text>
+                        <Text style={styles.actionCardSubtitle}>Find your fuel!</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.actionCard, styles.actionCardAnalyzer]}
+                        activeOpacity={0.8}
+                        onPress={() => router.push("/ai-food-analyzer")}
+                    >
+                        <Text style={styles.actionCardIcon}>🔍</Text>
+                        <Text style={styles.actionCardTitle}>AI Food Analyzer</Text>
+                        <Text style={styles.actionCardSubtitle}>Smart nutrition insights</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.actionCard, styles.actionCardSwaps]}
+                        activeOpacity={0.8}
+                        onPress={() => router.push("/smart-swaps")}
+                    >
+                        <Text style={styles.actionCardIcon}>🔄</Text>
+                        <Text style={styles.actionCardTitle}>Smart Swaps</Text>
+                        <Text style={styles.actionCardSubtitle}>Better alternatives</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.actionCard, styles.actionCardRoulette]}
+                        activeOpacity={0.8}
+                        onPress={() => router.push("/snack-roulette")}
+                    >
+                        <Text style={styles.actionCardIcon}>🎲</Text>
+                        <Text style={styles.actionCardTitle}>Shake for Snacks</Text>
+                        <Text style={styles.actionCardSubtitle}>Shake phone for recommendations</Text>
+                    </TouchableOpacity>
+
                     <TouchableOpacity
                         style={[styles.actionCard, styles.actionCardRestaurant]}
                         activeOpacity={0.8}
@@ -1127,38 +1197,8 @@ export default function HomeTab() {
                         }}
                     >
                         <Text style={styles.actionCardIcon}>🍽️</Text>
-                        <Text style={styles.actionCardTitle}>Healthy Restaurants</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={[styles.actionCard, styles.actionCardPlan]}
-                        activeOpacity={0.8}
-                        onPress={async () => {
-                            await StreakManager.logActivity('swap');
-                            router.push("/smart-swaps");
-                        }}
-                    >
-                        <Text style={styles.actionCardIcon}>🔄</Text>
-                        <Text style={styles.actionCardTitle}>Smart Swaps</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={[styles.actionCard, styles.actionCardNotifications]}
-                        activeOpacity={0.8}
-                        onPress={() => router.push("/notification-settings")}
-                    >
-                        <Text style={styles.actionCardIcon}>🔔</Text>
-                        <Text style={styles.actionCardTitle}>Notifications</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={[styles.actionCard, styles.actionCardRoulette]}
-                        activeOpacity={0.8}
-                        onPress={() => router.push("/snack-roulette")}
-                    >
-                        <Text style={styles.actionCardIcon}>🎲</Text>
-                        <Text style={styles.actionCardTitle}>Snack Roulette</Text>
-                        <Text style={styles.actionCardSubtitle}>Shake for ideas!</Text>
+                        <Text style={styles.actionCardTitle}>Restaurants</Text>
+                        <Text style={styles.actionCardSubtitle}>Find healthy options nearby</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -1546,6 +1586,24 @@ const styles = StyleSheet.create({
     },
     actionCardRoulette: {
         backgroundColor: "#FEF3C7",
+    },
+    actionCardCraving: {
+        backgroundColor: "#EDE9FE",
+    },
+    actionCardSatiety: {
+        backgroundColor: "#DBEAFE",
+    },
+    actionCardThirst: {
+        backgroundColor: "#CFFAFE",
+    },
+    actionCardEnergy: {
+        backgroundColor: "#FEF3C7",
+    },
+    actionCardAnalyzer: {
+        backgroundColor: "#F3E8FF",
+    },
+    actionCardSwaps: {
+        backgroundColor: "#ECFDF5",
     },
     actionCardIcon: {
         fontSize: 40,
@@ -1960,25 +2018,5 @@ const styles = StyleSheet.create({
         fontWeight: "600",
         textAlign: "center",
         fontStyle: "italic",
-    },
-    
-    // Challenge-specific action card styles
-    actionCardEvening: {
-        backgroundColor: "#1E1B4B",
-    },
-    actionCardCraving: {
-        backgroundColor: "#991B1B",
-    },
-    actionCardSatiety: {
-        backgroundColor: "#064E3B",
-    },
-    actionCardMindful: {
-        backgroundColor: "#7C2D12",
-    },
-    actionCardStress: {
-        backgroundColor: "#1E3A8A",
-    },
-    actionCardBoredom: {
-        backgroundColor: "#581C87",
     },
 });

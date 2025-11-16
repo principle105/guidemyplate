@@ -1,8 +1,10 @@
 import AIFoodAnalyzer from "@/services/AIFoodAnalyzer";
+import PersonalizedAI from "@/services/PersonalizedAI";
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
+    ActivityIndicator,
     Alert,
     Image,
     SafeAreaView,
@@ -10,7 +12,7 @@ import {
     StyleSheet,
     Text,
     TouchableOpacity,
-    View,
+    View
 } from "react-native";
 
 export default function AIFoodAnalyzerScreen() {
@@ -18,6 +20,8 @@ export default function AIFoodAnalyzerScreen() {
     const [imageUri, setImageUri] = useState<string | null>(null);
     const [analyzing, setAnalyzing] = useState(false);
     const [analysis, setAnalysis] = useState<any>(null);
+    const [smartSwaps, setSmartSwaps] = useState<any[]>([]);
+    const [loadingSwaps, setLoadingSwaps] = useState(false);
 
     const pickImage = async () => {
         const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -61,12 +65,29 @@ export default function AIFoodAnalyzerScreen() {
     const analyzeImage = async (uri: string) => {
         setAnalyzing(true);
         setAnalysis(null);
+        setSmartSwaps([]);
 
         // Simulate AI processing time
         setTimeout(async () => {
             const result = await AIFoodAnalyzer.analyzeFood(uri);
             setAnalysis(result);
             setAnalyzing(false);
+
+            // Get AI-powered smart swaps
+            if (result && result.detectedFoods && result.detectedFoods.length > 0) {
+                setLoadingSwaps(true);
+                try {
+                    const primaryFood = result.detectedFoods[0].name;
+                    const swaps = await PersonalizedAI.getSmartSwaps(
+                        primaryFood,
+                        result.calories || 0
+                    );
+                    setSmartSwaps(swaps);
+                } catch (error) {
+                    console.error("Error getting smart swaps:", error);
+                }
+                setLoadingSwaps(false);
+            }
         }, 2000);
     };
 
@@ -225,6 +246,61 @@ export default function AIFoodAnalyzerScreen() {
                                         </View>
                                     ))}
                                 </View>
+
+                                {/* AI Smart Swaps */}
+                                {loadingSwaps ? (
+                                    <View style={styles.swapsLoadingCard}>
+                                        <ActivityIndicator size="small" color="#8B5CF6" />
+                                        <Text style={styles.swapsLoadingText}>
+                                            Getting personalized swaps...
+                                        </Text>
+                                    </View>
+                                ) : smartSwaps.length > 0 ? (
+                                    <View style={styles.smartSwapsCard}>
+                                        <Text style={styles.sectionTitle}>
+                                            🤖 AI-Powered Smart Swaps
+                                        </Text>
+                                        <Text style={styles.smartSwapsSubtitle}>
+                                            Personalized for YOUR body and goals
+                                        </Text>
+
+                                        {smartSwaps.map((swap, index) => (
+                                            <View key={index} style={styles.swapItem}>
+                                                <View style={styles.swapHeader}>
+                                                    <Text style={styles.swapNumber}>#{index + 1}</Text>
+                                                    <Text style={styles.swapSuggestion}>
+                                                        {swap.swapSuggestion}
+                                                    </Text>
+                                                </View>
+
+                                                <Text style={styles.swapReason}>{swap.reason}</Text>
+
+                                                <View style={styles.swapBenefits}>
+                                                    <View style={styles.swapBenefit}>
+                                                        <Text style={styles.swapBenefitLabel}>
+                                                            Satiety:
+                                                        </Text>
+                                                        <Text style={styles.swapBenefitValue}>
+                                                            {swap.satietyImprovement}
+                                                        </Text>
+                                                    </View>
+                                                    <View style={styles.swapBenefit}>
+                                                        <Text style={styles.swapBenefitLabel}>
+                                                            Calories:
+                                                        </Text>
+                                                        <Text style={styles.swapBenefitValue}>
+                                                            {swap.calorieImpact}
+                                                        </Text>
+                                                    </View>
+                                                </View>
+
+                                                <Text style={styles.swapHealthBenefit}>
+                                                    💚 {swap.healthBenefit}
+                                                </Text>
+                                            </View>
+                                        ))}
+                                    </View>
+                                ) : null}
 
                                 {/* Action Buttons */}
                                 <TouchableOpacity
@@ -528,5 +604,87 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: "600",
         color: "#FFFFFF",
+    },
+    swapsLoadingCard: {
+        backgroundColor: "#1F2937",
+        borderRadius: 16,
+        padding: 20,
+        marginBottom: 24,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+    },
+    swapsLoadingText: {
+        fontSize: 14,
+        color: "#9CA3AF",
+    },
+    smartSwapsCard: {
+        backgroundColor: "#1F2937",
+        borderRadius: 16,
+        padding: 20,
+        marginBottom: 24,
+        borderLeftWidth: 4,
+        borderLeftColor: "#8B5CF6",
+    },
+    smartSwapsSubtitle: {
+        fontSize: 14,
+        color: "#A78BFA",
+        marginBottom: 16,
+    },
+    swapItem: {
+        backgroundColor: "#374151",
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 12,
+    },
+    swapHeader: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: 8,
+        gap: 12,
+    },
+    swapNumber: {
+        fontSize: 12,
+        fontWeight: "700",
+        color: "#8B5CF6",
+        backgroundColor: "#EDE9FE",
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 8,
+    },
+    swapSuggestion: {
+        fontSize: 16,
+        fontWeight: "700",
+        color: "#FFFFFF",
+        flex: 1,
+    },
+    swapReason: {
+        fontSize: 14,
+        color: "#E5E7EB",
+        lineHeight: 20,
+        marginBottom: 12,
+    },
+    swapBenefits: {
+        flexDirection: "row",
+        gap: 16,
+        marginBottom: 12,
+    },
+    swapBenefit: {
+        flex: 1,
+    },
+    swapBenefitLabel: {
+        fontSize: 12,
+        color: "#9CA3AF",
+        marginBottom: 2,
+    },
+    swapBenefitValue: {
+        fontSize: 13,
+        fontWeight: "600",
+        color: "#10B981",
+    },
+    swapHealthBenefit: {
+        fontSize: 13,
+        color: "#A78BFA",
+        fontStyle: "italic",
     },
 });
