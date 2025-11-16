@@ -30,20 +30,172 @@ export default function HomeTab() {
     const { user, logout } = useAuth();
     const router = useRouter();
     const [surveyData, setSurveyData] = useState<SurveyData | null>(null);
+    const [dailyGoals, setDailyGoals] = useState<{
+        id: string;
+        text: string;
+        completed: boolean;
+    }[]>([]);
 
     // Load survey data on mount
     useEffect(() => {
         loadSurveyData();
+        loadDailyGoals();
     }, []);
 
     const loadSurveyData = async () => {
         try {
             const data = await AsyncStorage.getItem("surveyData");
             if (data) {
-                setSurveyData(JSON.parse(data));
+                const parsed = JSON.parse(data);
+                setSurveyData(parsed);
+                // Generate goals when survey data loads
+                generateDailyGoals(parsed);
             }
         } catch (error) {
             console.error("Error loading survey data:", error);
+        }
+    };
+
+    const loadDailyGoals = async () => {
+        try {
+            const today = new Date().toDateString();
+            const savedGoals = await AsyncStorage.getItem("dailyGoals");
+            const savedDate = await AsyncStorage.getItem("dailyGoalsDate");
+
+            if (savedGoals && savedDate === today) {
+                setDailyGoals(JSON.parse(savedGoals));
+            }
+        } catch (error) {
+            console.error("Error loading daily goals:", error);
+        }
+    };
+
+    const generateDailyGoals = async (data: SurveyData) => {
+        const goals = [];
+
+        // Goal based on biggest challenge
+        if (data.biggestChallenge === "Late-night snacking") {
+            goals.push({
+                id: "1",
+                text: "Eat protein-rich dinner (keeps you full)",
+                completed: false,
+            });
+            goals.push({
+                id: "2",
+                text: "Set a 'kitchen closed' time at 8pm",
+                completed: false,
+            });
+            goals.push({
+                id: "3",
+                text: "Find one non-food evening activity",
+                completed: false,
+            });
+        } else if (data.biggestChallenge === "Not feeling full") {
+            goals.push({
+                id: "1",
+                text: "Add protein to every meal today",
+                completed: false,
+            });
+            goals.push({
+                id: "2",
+                text: "Eat at least 2 servings of vegetables",
+                completed: false,
+            });
+            goals.push({
+                id: "3",
+                text: "Drink water before feeling hungry",
+                completed: false,
+            });
+        } else if (data.biggestChallenge === "Eating when stressed/bored") {
+            goals.push({
+                id: "1",
+                text: "Take a 5-min walk when stressed",
+                completed: false,
+            });
+            goals.push({
+                id: "2",
+                text: "Call a friend instead of snacking",
+                completed: false,
+            });
+            goals.push({
+                id: "3",
+                text: "Journal your feelings before eating",
+                completed: false,
+            });
+        } else if (data.biggestChallenge === "Skipping meals then overeating") {
+            goals.push({
+                id: "1",
+                text: "Eat breakfast within 1 hour of waking",
+                completed: false,
+            });
+            goals.push({
+                id: "2",
+                text: "Set 3 meal reminders for today",
+                completed: false,
+            });
+            goals.push({
+                id: "3",
+                text: "Prep a healthy snack for afternoon",
+                completed: false,
+            });
+        } else if (data.biggestChallenge === "Too many processed foods") {
+            goals.push({
+                id: "1",
+                text: "Choose one whole food over processed",
+                completed: false,
+            });
+            goals.push({
+                id: "2",
+                text: "Cook one meal from scratch",
+                completed: false,
+            });
+            goals.push({
+                id: "3",
+                text: "Read ingredient labels before buying",
+                completed: false,
+            });
+        } else {
+            // Default goals
+            goals.push({
+                id: "1",
+                text: "Log all your meals today",
+                completed: false,
+            });
+            goals.push({
+                id: "2",
+                text: "Drink 8 cups of water",
+                completed: false,
+            });
+            goals.push({
+                id: "3",
+                text: "Take a 10-minute walk",
+                completed: false,
+            });
+        }
+
+        setDailyGoals(goals);
+        
+        // Save goals with today's date
+        const today = new Date().toDateString();
+        await AsyncStorage.setItem("dailyGoals", JSON.stringify(goals));
+        await AsyncStorage.setItem("dailyGoalsDate", today);
+    };
+
+    const toggleGoal = async (goalId: string) => {
+        const updatedGoals = dailyGoals.map((goal) =>
+            goal.id === goalId ? { ...goal, completed: !goal.completed } : goal
+        );
+        setDailyGoals(updatedGoals);
+        await AsyncStorage.setItem("dailyGoals", JSON.stringify(updatedGoals));
+
+        // Check if all goals completed
+        const allCompleted = updatedGoals.every((g) => g.completed);
+        if (allCompleted) {
+            Alert.alert(
+                "🎉 Amazing Work!",
+                "You crushed all your goals today! This is how lasting change happens.",
+                [{ text: "Keep Going!", style: "default" }]
+            );
         }
     };
 
@@ -230,6 +382,81 @@ export default function HomeTab() {
                     </TouchableOpacity>
                 </View>
 
+                {/* Daily Micro-Goals */}
+                <View style={styles.microGoalsCard}>
+                    <Text
+                        style={[
+                            styles.microGoalsTitle,
+                            isDark && styles.microGoalsTitleDark,
+                        ]}
+                    >
+                        🎯 Today's Action Plan
+                    </Text>
+                    <Text
+                        style={[
+                            styles.microGoalsSubtitle,
+                            isDark && styles.microGoalsSubtitleDark,
+                        ]}
+                    >
+                        Small steps, big results
+                    </Text>
+
+                    {dailyGoals.map((goal) => (
+                        <TouchableOpacity
+                            key={goal.id}
+                            style={[
+                                styles.goalCheckbox,
+                                goal.completed && styles.goalCheckboxCompleted,
+                                isDark && styles.goalCheckboxDark,
+                            ]}
+                            onPress={() => toggleGoal(goal.id)}
+                            activeOpacity={0.7}
+                        >
+                            <View
+                                style={[
+                                    styles.checkbox,
+                                    goal.completed && styles.checkboxCompleted,
+                                ]}
+                            >
+                                {goal.completed && (
+                                    <Text style={styles.checkmark}>✓</Text>
+                                )}
+                            </View>
+                            <Text
+                                style={[
+                                    styles.goalText,
+                                    goal.completed && styles.goalTextCompleted,
+                                    isDark && styles.goalTextDark,
+                                ]}
+                            >
+                                {goal.text}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
+
+                    <View style={styles.microGoalProgressContainer}>
+                        <View style={styles.microGoalProgressBar}>
+                            <View
+                                style={[
+                                    styles.microGoalProgressFill,
+                                    {
+                                        width: `${(dailyGoals.filter((g) => g.completed).length / dailyGoals.length) * 100}%`,
+                                    },
+                                ]}
+                            />
+                        </View>
+                        <Text
+                            style={[
+                                styles.microGoalProgressText,
+                                isDark && styles.microGoalProgressTextDark,
+                            ]}
+                        >
+                            {dailyGoals.filter((g) => g.completed).length} of{" "}
+                            {dailyGoals.length} completed
+                        </Text>
+                    </View>
+                </View>
+
                 {/* Goal Progress */}
                 <View style={styles.goalCard}>
                     <View style={styles.goalHeader}>
@@ -378,12 +605,13 @@ export default function HomeTab() {
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                        style={[styles.actionCard, styles.actionCardRestaurant]}
+                        style={[styles.actionCard, styles.actionCardWin]}
                         activeOpacity={0.8}
+                        onPress={() => router.push("/daily-win")}
                     >
-                        <Text style={styles.actionCardIcon}>🍽️</Text>
+                        <Text style={styles.actionCardIcon}>🎉</Text>
                         <Text style={styles.actionCardTitle}>
-                            Healthy Spots
+                            Today's Win
                         </Text>
                     </TouchableOpacity>
 
@@ -777,8 +1005,8 @@ const styles = StyleSheet.create({
     actionCardWeight: {
         backgroundColor: "#DBEAFE",
     },
-    actionCardRestaurant: {
-        backgroundColor: "#DCFCE7",
+    actionCardWin: {
+        backgroundColor: "#F3E8FF",
     },
     actionCardSwap: {
         backgroundColor: "#FEF3C7",
@@ -806,5 +1034,106 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: "600",
         color: "#EF4444",
+    },
+    microGoalsCard: {
+        backgroundColor: "#FFFFFF",
+        borderRadius: 20,
+        padding: 20,
+        marginBottom: 24,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 12,
+        elevation: 3,
+    },
+    microGoalsTitle: {
+        fontSize: 22,
+        fontWeight: "bold",
+        color: "#1F2937",
+        marginBottom: 4,
+    },
+    microGoalsTitleDark: {
+        color: "#FFFFFF",
+    },
+    microGoalsSubtitle: {
+        fontSize: 14,
+        color: "#6B7280",
+        marginBottom: 16,
+    },
+    microGoalsSubtitleDark: {
+        color: "#9CA3AF",
+    },
+    goalCheckbox: {
+        flexDirection: "row",
+        alignItems: "center",
+        padding: 12,
+        backgroundColor: "#F9FAFB",
+        borderRadius: 12,
+        marginBottom: 10,
+        borderWidth: 2,
+        borderColor: "transparent",
+    },
+    goalCheckboxDark: {
+        backgroundColor: "#1F2937",
+    },
+    goalCheckboxCompleted: {
+        backgroundColor: "#ECFDF5",
+        borderColor: "#10B981",
+    },
+    checkbox: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        borderWidth: 2,
+        borderColor: "#D1D5DB",
+        marginRight: 12,
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    checkboxCompleted: {
+        backgroundColor: "#10B981",
+        borderColor: "#10B981",
+    },
+    checkmark: {
+        color: "#FFFFFF",
+        fontSize: 14,
+        fontWeight: "bold",
+    },
+    goalText: {
+        fontSize: 15,
+        color: "#1F2937",
+        flex: 1,
+        lineHeight: 20,
+    },
+    goalTextDark: {
+        color: "#E5E7EB",
+    },
+    goalTextCompleted: {
+        color: "#6B7280",
+        textDecorationLine: "line-through",
+    },
+    microGoalProgressContainer: {
+        marginTop: 8,
+    },
+    microGoalProgressBar: {
+        height: 8,
+        backgroundColor: "#E5E7EB",
+        borderRadius: 4,
+        overflow: "hidden",
+        marginBottom: 8,
+    },
+    microGoalProgressFill: {
+        height: "100%",
+        backgroundColor: "#10B981",
+        borderRadius: 4,
+    },
+    microGoalProgressText: {
+        fontSize: 13,
+        color: "#6B7280",
+        textAlign: "center",
+        fontWeight: "600",
+    },
+    microGoalProgressTextDark: {
+        color: "#9CA3AF",
     },
 });
