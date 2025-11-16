@@ -85,33 +85,7 @@ export default function HomeTab() {
                             Let's tackle today together
                         </Text>
                     </View>
-                    <TouchableOpacity style={styles.weightBadge}>
-                        <Text style={styles.weightText}>
-                            {currentWeight} lbs
-                        </Text>
-                        <Text style={styles.weightChange}>
-                            {weeklyChange > 0 ? "+" : ""}
-                            {weeklyChange} this week
-                        </Text>
-                    </TouchableOpacity>
                 </View>
-
-                {/* Quick Log Meal Button - Make it prominent */}
-                <TouchableOpacity
-                    style={styles.primaryButton}
-                    activeOpacity={0.8}
-                >
-                    <Text style={styles.primaryButtonIcon}>📸</Text>
-                    <View style={styles.primaryButtonContent}>
-                        <Text style={styles.primaryButtonTitle}>
-                            Log Your Meal
-                        </Text>
-                        <Text style={styles.primaryButtonSubtitle}>
-                            Quick snap or manual entry
-                        </Text>
-                    </View>
-                    <Text style={styles.primaryButtonArrow}>→</Text>
-                </TouchableOpacity>
 
                 {/* Goal Progress */}
                 <View style={styles.goalCard}>
@@ -207,61 +181,6 @@ export default function HomeTab() {
                         </View>
                     </View>
                 ))}
-
-                {/* What You're Lacking */}
-                <View style={styles.sectionHeader}>
-                    <Text
-                        style={[
-                            styles.sectionTitle,
-                            isDark && styles.sectionTitleDark,
-                        ]}
-                    >
-                        🥗 What You're Missing Today
-                    </Text>
-                </View>
-
-                <View style={[styles.gapsCard, isDark && styles.gapsCardDark]}>
-                    {nutritionGaps.map((gap, index) => (
-                        <View key={index} style={styles.gapItem}>
-                            <Text style={styles.gapIcon}>{gap.icon}</Text>
-                            <View style={styles.gapContent}>
-                                <Text
-                                    style={[
-                                        styles.gapName,
-                                        isDark && styles.gapNameDark,
-                                    ]}
-                                >
-                                    {gap.name}
-                                </Text>
-                                <View style={styles.gapProgressBar}>
-                                    <View
-                                        style={[
-                                            styles.gapProgressFill,
-                                            {
-                                                width: `${(gap.current / gap.target) * 100}%`,
-                                                backgroundColor:
-                                                    gap.current >= gap.target
-                                                        ? "#10B981"
-                                                        : gap.current >=
-                                                            gap.target * 0.5
-                                                          ? "#F59E0B"
-                                                          : "#EF4444",
-                                            },
-                                        ]}
-                                    />
-                                </View>
-                                <Text
-                                    style={[
-                                        styles.gapNumbers,
-                                        isDark && styles.gapNumbersDark,
-                                    ]}
-                                >
-                                    {gap.current}/{gap.target} {gap.unit}
-                                </Text>
-                            </View>
-                        </View>
-                    ))}
-                </View>
 
                 {/* Pattern Insight */}
                 <View
