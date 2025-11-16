@@ -9,9 +9,13 @@
         "userInterfaceStyle": "automatic",
         "newArchEnabled": true,
         "ios": {
-            "supportsTablet": true
+            "supportsTablet": true,
+            "infoPlist": {
+                "NSLocationWhenInUseUsageDescription": "GuideMyPlate needs your location to find healthy restaurants nearby."
+            }
         },
         "android": {
+            "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"],
             "adaptiveIcon": {
                 "backgroundColor": "#E6F4FE",
                 "foregroundImage": "./assets/images/android-icon-foreground.png",

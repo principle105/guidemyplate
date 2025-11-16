@@ -14,9 +14,6 @@ type PlusTabBarButtonProps = {
 };
 
 function PlusTabBarButton({ style, onPress, ...rest }: PlusTabBarButtonProps) {
-    const colorScheme = useColorScheme();
-    const tint = Colors[colorScheme ?? "light"].tint;
-
     return (
         <Pressable
             {...rest}
@@ -31,8 +28,8 @@ function PlusTabBarButton({ style, onPress, ...rest }: PlusTabBarButtonProps) {
                 pressed && styles.plusButtonWrapperPressed,
             ]}
         >
-            <View style={[styles.plusCircle, { backgroundColor: tint }]}>
-                <IconSymbol name="plus" size={18} color="#FFFFFF" />
+            <View style={styles.plusCircle}>
+                <IconSymbol name="plus" size={22} color="#FFFFFF" />
             </View>
         </Pressable>
     );
@@ -76,7 +73,7 @@ export default function TabLayout() {
             <Tabs.Screen
                 name="log"
                 options={{
-                    title: "",
+                    title: "Log Meal",
                     tabBarLabel: "",
                     tabBarIcon: () => null,
                     tabBarButton: (props) => <PlusTabBarButton {...props} />,
@@ -129,15 +126,16 @@ const styles = StyleSheet.create({
         transform: [{ scale: 0.96 }],
     },
     plusCircle: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: "#3B82F6",
         justifyContent: "center",
         alignItems: "center",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.16,
-        shadowRadius: 5,
-        elevation: 4,
+        shadowColor: "#3B82F6",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 6,
+        elevation: 6,
     },
 });

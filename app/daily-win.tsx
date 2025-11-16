@@ -12,6 +12,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import StreakManager from "../services/StreakManager";
 
 export default function DailyWinScreen() {
     const router = useRouter();
@@ -44,6 +45,9 @@ export default function DailyWinScreen() {
             }
 
             await AsyncStorage.setItem("dailyWins", JSON.stringify(wins));
+            
+            // Log activity for streak tracking
+            await StreakManager.logActivity('win', { text: winText, emoji: selectedEmoji });
             
             Alert.alert(
                 "Amazing! 🎉",

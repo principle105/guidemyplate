@@ -1,28 +1,60 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
 import {
+    Alert,
     Dimensions,
     SafeAreaView,
     ScrollView,
     StyleSheet,
     Text,
+    TextInput,
+    TouchableOpacity,
     View,
 } from "react-native";
+import MotivationEngine, { MotivationInsight } from "../../services/MotivationEngine";
 
 const screenWidth = Dimensions.get("window").width;
 
 export default function ProgressTab() {
     const [surveyData, setSurveyData] = useState<any>(null);
     const [weeklyData, setWeeklyData] = useState<any[]>([]);
+    const [weightHistory, setWeightHistory] = useState<any[]>([]);
+    const [newWeight, setNewWeight] = useState('');
+    const [showWeightInput, setShowWeightInput] = useState(false);
+    const [motivationInsights, setMotivationInsights] = useState<MotivationInsight[]>([]);
+    const [dataLoaded, setDataLoaded] = useState(false);
 
     useEffect(() => {
         loadData();
     }, []);
+    
+    useEffect(() => {
+        if (surveyData && weightHistory) {
+            loadMotivationInsights();
+        }
+    }, [surveyData, weightHistory]);
+    
+    // Reload data when survey data updates to ensure goal weight is current
+    useEffect(() => {
+        if (surveyData) {
+            // Force re-render with updated survey data
+            loadData();
+        }
+    }, [surveyData?.goalWeight, surveyData?.currentWeight]);
 
     const loadData = async () => {
         const survey = await AsyncStorage.getItem("surveyData");
         if (survey) setSurveyData(JSON.parse(survey));
 
+        // Load weight history
+        const history = await AsyncStorage.getItem("weightHistory");
+        if (history) {
+            setWeightHistory(JSON.parse(history));
+        }
+
+        // Load motivational insights
+        await loadMotivationInsights();
+        
         // Mock weekly calorie data
         const mockWeekly = [
             { day: "Mon", calories: 1850, target: 1900 },
@@ -34,12 +66,141 @@ export default function ProgressTab() {
             { day: "Sun", calories: 1800, target: 1900 },
         ];
         setWeeklyData(mockWeekly);
+        
+        // Debug log to check loaded data
+        console.log('Progress tab loaded data:', {
+            surveyCurrentWeight: surveyData?.currentWeight,
+            surveyGoalWeight: surveyData?.goalWeight,
+            weightHistoryLength: history ? JSON.parse(history).length : 0
+        });
+        
+        setDataLoaded(true);
     };
 
-    const currentWeight = surveyData?.currentWeight || 185;
-    const goalWeight = surveyData?.goalWeight || 165;
-    const lost = 5; // Mock weight lost
-    const remaining = currentWeight - goalWeight - lost;
+    const loadMotivationInsights = async () => {
+        try {
+            if (surveyData && weightHistory.length > 0) {
+                const currentWeight = weightHistory[0]?.weight || Number(surveyData.currentWeight);
+                const insights = await MotivationEngine.generateMotivationalInsights(
+                    surveyData,
+                    weightHistory,
+                    currentWeight
+                );
+                setMotivationInsights(insights);
+            } else if (surveyData) {
+                // New user with no weight history yet
+                const currentWeight = Number(surveyData.currentWeight);
+                const insights = await MotivationEngine.generateMotivationalInsights(
+                    surveyData,
+                    [],
+                    currentWeight
+                );
+                setMotivationInsights(insights);
+            }
+        } catch (error) {
+            console.error('Error loading motivation insights:', error);
+        }
+    };
+
+    const logWeight = async () => {
+        if (!newWeight || isNaN(Number(newWeight))) {
+            Alert.alert('Invalid Weight', 'Please enter a valid weight');
+            return;
+        }
+
+        const weightEntry = {
+            weight: parseFloat(newWeight),
+            date: new Date().toISOString(),
+        };
+
+        const updatedHistory = [weightEntry, ...weightHistory];
+        setWeightHistory(updatedHistory);
+        await AsyncStorage.setItem('weightHistory', JSON.stringify(updatedHistory));
+        
+        // Also update the current weight key for immediate sync
+        await AsyncStorage.setItem('currentWeight', newWeight);
+        
+        setNewWeight('');
+        setShowWeightInput(false);
+        
+        Alert.alert(
+            'Weight Logged! 🎉',
+            `Your weight of ${newWeight} lbs has been recorded.`,
+            [{ text: 'Great!', style: 'default' }]
+        );
+        
+        // Refresh motivation insights with new weight
+        await loadMotivationInsights();
+    };
+
+    const deleteWeightEntry = async (index: number) => {
+        Alert.alert(
+            'Delete Weight Entry',
+            'Are you sure you want to delete this weight entry?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        const updatedHistory = weightHistory.filter((_, i) => i !== index);
+                        setWeightHistory(updatedHistory);
+                        await AsyncStorage.setItem('weightHistory', JSON.stringify(updatedHistory));
+                        
+                        // If deleting the most recent entry, update current weight to next most recent or survey data
+                        if (index === 0) {
+                            const newCurrentWeight = updatedHistory.length > 0 
+                                ? updatedHistory[0].weight 
+                                : (surveyData?.currentWeight ? Number(surveyData.currentWeight) : 185);
+                            await AsyncStorage.setItem('currentWeight', newCurrentWeight.toString());
+                        }
+                        
+                        await loadMotivationInsights();
+                        Alert.alert('Deleted!', 'Weight entry has been removed.');
+                    }
+                }
+            ]
+        );
+    };
+
+    const resetToSurveyData = async () => {
+        Alert.alert(
+            'Reset Weight Data',
+            'This will clear all weight history and reset to your survey starting weight. Are you sure?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Reset',
+                    style: 'destructive',
+                    onPress: async () => {
+                        await AsyncStorage.removeItem('weightHistory');
+                        await AsyncStorage.removeItem('currentWeight');
+                        setWeightHistory([]);
+                        await loadMotivationInsights();
+                        Alert.alert('Reset Complete!', 'Weight data has been reset to your survey starting weight.');
+                    }
+                }
+            ]
+        );
+    };
+
+    // Show survey weight first for new users, then most recent logged weight
+    const currentWeight = weightHistory.length > 0 ? weightHistory[0].weight : (surveyData?.currentWeight ? Number(surveyData.currentWeight) : (dataLoaded ? 185 : 0));
+    const goalWeight = surveyData?.goalWeight ? Number(surveyData.goalWeight) : (dataLoaded ? 165 : 0);
+    const startingWeight = surveyData?.currentWeight ? Number(surveyData.currentWeight) : (dataLoaded ? 185 : 0);
+    const weightLost = Math.max(0, startingWeight - currentWeight);
+    const remaining = Math.max(0, currentWeight - goalWeight);
+
+    // Show loading screen while data loads
+    if (!dataLoaded) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <View style={styles.loadingContainer}>
+                    <Text style={styles.loadingText}>Loading your progress...</Text>
+                </View>
+            </SafeAreaView>
+        );
+    }
 
     return (
         <SafeAreaView style={styles.container}>
@@ -49,158 +210,265 @@ export default function ProgressTab() {
             >
                 <Text style={styles.title}>Your Progress 📊</Text>
 
-                {/* Weight Progress */}
+                {/* Interactive Weight Journey Timeline */}
                 <View style={styles.card}>
-                    <Text style={styles.cardTitle}>Weight Journey</Text>
+                    <Text style={styles.cardTitle}>Weight Journey Timeline</Text>
+                    
+                    {/* Current Status */}
                     <View style={styles.weightRow}>
                         <View style={styles.weightItem}>
                             <Text style={styles.weightLabel}>Start</Text>
-                            <Text style={styles.weightValue}>
-                                {currentWeight}
-                            </Text>
+                            <Text style={styles.weightValue}>{surveyData?.currentWeight || currentWeight}</Text>
                             <Text style={styles.weightUnit}>lbs</Text>
                         </View>
                         <Text style={styles.arrow}>→</Text>
                         <View style={styles.weightItem}>
                             <Text style={styles.weightLabel}>Current</Text>
-                            <Text style={[styles.weightValue, { color: "#8B5CF6" }]}>
-                                {currentWeight - lost}
+                            <Text style={[styles.weightValue, {color: "#8B5CF6"}]}>
+                                {weightHistory.length > 0 ? weightHistory[0].weight : (surveyData?.currentWeight || currentWeight)}
                             </Text>
                             <Text style={styles.weightUnit}>lbs</Text>
                         </View>
                         <Text style={styles.arrow}>→</Text>
                         <View style={styles.weightItem}>
                             <Text style={styles.weightLabel}>Goal</Text>
-                            <Text style={[styles.weightValue, { color: "#10B981" }]}>
-                                {goalWeight}
-                            </Text>
+                            <Text style={[styles.weightValue, {color: "#10B981"}]}>{goalWeight}</Text>
                             <Text style={styles.weightUnit}>lbs</Text>
                         </View>
                     </View>
 
+                    {/* Real Progress Bar */}
                     <View style={styles.progressBar}>
                         <View
                             style={[
                                 styles.progressFill,
                                 {
-                                    width: `${((currentWeight - (currentWeight - lost)) / (currentWeight - goalWeight)) * 100}%`,
+                                    width: `${startingWeight !== goalWeight ? 
+                                        Math.min(100, Math.max(0, ((startingWeight - currentWeight) / (startingWeight - goalWeight)) * 100))
+                                        : 100}%`,
                                 },
                             ]}
                         />
                     </View>
 
                     <Text style={styles.progressText}>
-                        🎉 Lost {lost} lbs • {remaining} lbs to go
+                        {weightHistory.length > 0 
+                            ? `🎉 ${Math.abs(Number(surveyData?.currentWeight || currentWeight) - weightHistory[0].weight).toFixed(1)} lbs ${Number(surveyData?.currentWeight || currentWeight) > weightHistory[0].weight ? 'lost' : 'gained'} so far!`
+                            : '📊 Start logging your weight to track real progress'
+                        }
                     </Text>
-                </View>
+                    
+                    {/* Weight Input Section */}
+                    {showWeightInput ? (
+                        <View style={styles.weightInputContainer}>
+                            <TextInput
+                                style={styles.weightInput}
+                                value={newWeight}
+                                onChangeText={setNewWeight}
+                                placeholder="Enter today's weight"
+                                placeholderTextColor="#9CA3AF"
+                                keyboardType="numeric"
+                            />
+                            <View style={styles.inputButtons}>
+                                <TouchableOpacity 
+                                    style={[styles.inputButton, {backgroundColor: '#10B981'}]}
+                                    onPress={logWeight}
+                                >
+                                    <Text style={styles.inputButtonText}>Save</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity 
+                                    style={[styles.inputButton, {backgroundColor: '#6B7280'}]}
+                                    onPress={() => {setShowWeightInput(false); setNewWeight('');}}
+                                >
+                                    <Text style={styles.inputButtonText}>Cancel</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    ) : (
+                        <TouchableOpacity 
+                            style={styles.logButton}
+                            onPress={() => setShowWeightInput(true)}
+                        >
+                            <Text style={styles.logButtonText}>
+                                📝 Log Today's Weight
+                            </Text>
+                        </TouchableOpacity>
+                    )}
 
-                {/* Weekly Calorie Chart */}
-                <View style={styles.card}>
-                    <Text style={styles.cardTitle}>Weekly Calories</Text>
-                    <View style={styles.chart}>
-                        {weeklyData.map((day, index) => {
-                            const maxCalories = 2200;
-                            const height = (day.calories / maxCalories) * 150;
-                            const targetHeight = (day.target / maxCalories) * 150;
-                            const isUnder = day.calories <= day.target;
-
-                            return (
-                                <View key={index} style={styles.bar}>
-                                    <View style={styles.barContainer}>
-                                        {/* Target line */}
-                                        <View
-                                            style={[
-                                                styles.targetLine,
-                                                { bottom: targetHeight },
-                                            ]}
-                                        />
-                                        {/* Actual bar */}
-                                        <View
-                                            style={[
-                                                styles.barFill,
-                                                {
-                                                    height: height,
-                                                    backgroundColor: isUnder
-                                                        ? "#10B981"
-                                                        : "#F59E0B",
-                                                },
-                                            ]}
-                                        />
+                    {/* Weight History Timeline */}
+                    {weightHistory.length > 0 && (
+                        <View style={styles.timeline}>
+                            <View style={styles.timelineHeader}>
+                                <Text style={styles.timelineTitle}>Recent Entries</Text>
+                                <TouchableOpacity onPress={resetToSurveyData} style={styles.resetButton}>
+                                    <Text style={styles.resetButtonText}>Reset</Text>
+                                </TouchableOpacity>
+                            </View>
+                            {weightHistory.slice(0, 5).map((entry: any, index: number) => {
+                                // Validate and format date
+                                const entryDate = entry.date ? new Date(entry.date) : new Date();
+                                const isValidDate = !isNaN(entryDate.getTime());
+                                const formattedDate = isValidDate 
+                                    ? entryDate.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' })
+                                    : 'Invalid Date';
+                                
+                                return (
+                                    <View key={index} style={styles.timelineEntry}>
+                                        <View style={styles.entryInfo}>
+                                            <Text style={styles.timelineDate}>{formattedDate}</Text>
+                                            <Text style={styles.timelineWeight}>{entry.weight} lbs</Text>
+                                            {index > 0 && (
+                                                <Text style={[
+                                                    styles.timelineChange,
+                                                    {color: entry.weight < weightHistory[index-1].weight ? '#10B981' : '#F59E0B'}
+                                                ]}>
+                                                    {entry.weight < weightHistory[index-1].weight ? '-' : '+'}
+                                                    {Math.abs(entry.weight - weightHistory[index-1].weight).toFixed(1)}
+                                                </Text>
+                                            )}
+                                        </View>
+                                        <TouchableOpacity 
+                                            onPress={() => deleteWeightEntry(index)}
+                                            style={styles.deleteButton}
+                                        >
+                                            <Text style={styles.deleteButtonText}>🗑️</Text>
+                                        </TouchableOpacity>
                                     </View>
-                                    <Text style={styles.barLabel}>
-                                        {day.day}
-                                    </Text>
-                                    <Text style={styles.barValue}>
-                                        {day.calories}
-                                    </Text>
-                                </View>
-                            );
-                        })}
-                    </View>
-                    <View style={styles.legend}>
-                        <View style={styles.legendItem}>
-                            <View
-                                style={[
-                                    styles.legendDot,
-                                    { backgroundColor: "#10B981" },
-                                ]}
-                            />
-                            <Text style={styles.legendText}>Under target</Text>
+                                );
+                            })}
                         </View>
-                        <View style={styles.legendItem}>
-                            <View
-                                style={[
-                                    styles.legendDot,
-                                    { backgroundColor: "#F59E0B" },
-                                ]}
-                            />
-                            <Text style={styles.legendText}>Over target</Text>
-                        </View>
-                    </View>
+                    )}
                 </View>
 
-                {/* Streak */}
+                {/* Personalized Challenge Tracker */}
                 <View style={styles.card}>
-                    <Text style={styles.cardTitle}>Current Streak 🔥</Text>
-                    <View style={styles.streakContainer}>
-                        <Text style={styles.streakNumber}>12</Text>
-                        <Text style={styles.streakText}>days</Text>
-                    </View>
-                    <Text style={styles.streakMessage}>
-                        You've logged meals for 12 days in a row! Keep it up!
+                    <Text style={styles.cardTitle}>
+                        🎯 Your Personal Challenge: {surveyData?.biggestChallenge || 'Building Healthy Habits'}
                     </Text>
-                </View>
-
-                {/* Achievements */}
-                <View style={styles.card}>
-                    <Text style={styles.cardTitle}>Achievements 🏆</Text>
-                    <View style={styles.achievements}>
-                        <View style={styles.achievement}>
-                            <Text style={styles.achievementIcon}>🎯</Text>
-                            <Text style={styles.achievementText}>
-                                First Week Complete
-                            </Text>
-                        </View>
-                        <View style={styles.achievement}>
-                            <Text style={styles.achievementIcon}>💪</Text>
-                            <Text style={styles.achievementText}>
-                                5 lbs Lost
-                            </Text>
-                        </View>
-                        <View style={styles.achievement}>
-                            <Text style={styles.achievementIcon}>📸</Text>
-                            <Text style={styles.achievementText}>
-                                Photo Logger
-                            </Text>
-                        </View>
-                        <View style={styles.achievement}>
-                            <Text style={styles.achievementIcon}>🔥</Text>
-                            <Text style={styles.achievementText}>
-                                10 Day Streak
-                            </Text>
-                        </View>
+                    
+                    {/* Challenge-specific insights and actions */}
+                    <View style={styles.challengeContent}>
+                        {surveyData?.biggestChallenge === "Late-night snacking" && (
+                            <>
+                                <Text style={styles.challengeDescription}>
+                                    Track your evening habits to break the late-night snacking cycle
+                                </Text>
+                                <View style={styles.challengeActions}>
+                                    <View style={styles.challengeAction}>
+                                        <Text style={styles.actionIcon}>🌙</Text>
+                                        <Text style={styles.actionText}>Set kitchen closed time: 8pm</Text>
+                                        <Text style={styles.actionStatus}>Not set</Text>
+                                    </View>
+                                    <View style={styles.challengeAction}>
+                                        <Text style={styles.actionIcon}>☕</Text>
+                                        <Text style={styles.actionText}>Evening herbal tea routine</Text>
+                                        <Text style={styles.actionStatus}>0/7 days</Text>
+                                    </View>
+                                </View>
+                            </>
+                        )}
+                        
+                        {surveyData?.biggestChallenge === "Not feeling full" && (
+                            <>
+                                <Text style={styles.challengeDescription}>
+                                    Focus on protein and fiber to increase satiety
+                                </Text>
+                                <View style={styles.challengeActions}>
+                                    <View style={styles.challengeAction}>
+                                        <Text style={styles.actionIcon}>🥩</Text>
+                                        <Text style={styles.actionText}>Protein at every meal</Text>
+                                        <Text style={styles.actionStatus}>0/21 meals</Text>
+                                    </View>
+                                    <View style={styles.challengeAction}>
+                                        <Text style={styles.actionIcon}>🥬</Text>
+                                        <Text style={styles.actionText}>2+ servings vegetables daily</Text>
+                                        <Text style={styles.actionStatus}>0/7 days</Text>
+                                    </View>
+                                </View>
+                            </>
+                        )}
+                        
+                        {surveyData?.biggestChallenge === "Eating when stressed/bored" && (
+                            <>
+                                <Text style={styles.challengeDescription}>
+                                    Build alternative responses to stress and boredom
+                                </Text>
+                                <View style={styles.challengeActions}>
+                                    <View style={styles.challengeAction}>
+                                        <Text style={styles.actionIcon}>🚶</Text>
+                                        <Text style={styles.actionText}>5-min walk instead of snacking</Text>
+                                        <Text style={styles.actionStatus}>0 walks</Text>
+                                    </View>
+                                    <View style={styles.challengeAction}>
+                                        <Text style={styles.actionIcon}>📝</Text>
+                                        <Text style={styles.actionText}>Journal feelings before eating</Text>
+                                        <Text style={styles.actionStatus}>0 entries</Text>
+                                    </View>
+                                </View>
+                            </>
+                        )}
+                        
+                        {(!surveyData?.biggestChallenge || !["Late-night snacking", "Not feeling full", "Eating when stressed/bored"].includes(surveyData.biggestChallenge)) && (
+                            <>
+                                <Text style={styles.challengeDescription}>
+                                    Building consistent healthy habits one step at a time
+                                </Text>
+                                <View style={styles.challengeActions}>
+                                    <View style={styles.challengeAction}>
+                                        <Text style={styles.actionIcon}>💧</Text>
+                                        <Text style={styles.actionText}>Drink 8 glasses of water daily</Text>
+                                        <Text style={styles.actionStatus}>0/7 days</Text>
+                                    </View>
+                                    <View style={styles.challengeAction}>
+                                        <Text style={styles.actionIcon}>🥗</Text>
+                                        <Text style={styles.actionText}>Log all meals consistently</Text>
+                                        <Text style={styles.actionStatus}>0/7 days</Text>
+                                    </View>
+                                </View>
+                            </>
+                        )}
+                        
+                        <Text style={styles.challengeTip}>
+                            💡 Complete daily goals to track progress with your specific challenge
+                        </Text>
                     </View>
                 </View>
+
+                {/* Dynamic Motivational Insights */}
+                {motivationInsights.map((insight, index) => (
+                    <View key={index} style={[
+                        styles.card,
+                        insight.type === 'milestone' && styles.milestoneCard,
+                        insight.type === 'progress' && styles.progressCard
+                    ]}>
+                        <View style={styles.insightHeader}>
+                            <Text style={styles.insightIcon}>{insight.icon}</Text>
+                            <Text style={styles.cardTitle}>{insight.title}</Text>
+                        </View>
+                        
+                        <Text style={styles.insightMessage}>{insight.message}</Text>
+                        
+                        {insight.statistic && (
+                            <View style={styles.statisticContainer}>
+                                <Text style={styles.statisticText}>{insight.statistic}</Text>
+                            </View>
+                        )}
+                        
+                        <Text style={styles.encouragementText}>{insight.encouragement}</Text>
+                    </View>
+                ))}
+                
+                {motivationInsights.length === 0 && (
+                    <View style={styles.card}>
+                        <Text style={styles.cardTitle}>🎯 Your Journey Awaits</Text>
+                        <Text style={styles.insightMessage}>
+                            Start tracking your weight to see personalized motivation and insights!
+                        </Text>
+                        <Text style={styles.encouragementText}>
+                            Every step forward is progress worth celebrating.
+                        </Text>
+                    </View>
+                )}
             </ScrollView>
         </SafeAreaView>
     );
@@ -354,9 +622,93 @@ const styles = StyleSheet.create({
     },
     streakMessage: {
         fontSize: 14,
-        color: "#E5E7EB",
+        color: "#D1D5DB",
         textAlign: "center",
         lineHeight: 20,
+    },
+    // Motivation Insight Styles
+    milestoneCard: {
+        backgroundColor: "#065F46",
+        borderWidth: 2,
+        borderColor: "#10B981",
+    },
+    progressCard: {
+        backgroundColor: "#1E3A8A",
+        borderWidth: 2,
+        borderColor: "#3B82F6",
+    },
+    insightHeader: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: 12,
+    },
+    insightIcon: {
+        fontSize: 24,
+        marginRight: 12,
+    },
+    insightMessage: {
+        fontSize: 16,
+        color: "#F3F4F6",
+        lineHeight: 24,
+        marginBottom: 12,
+    },
+    statisticContainer: {
+        backgroundColor: "rgba(255,255,255,0.1)",
+        borderRadius: 8,
+        padding: 8,
+        marginBottom: 12,
+        alignSelf: "flex-start",
+    },
+    statisticText: {
+        fontSize: 14,
+        color: "#FBBF24",
+        fontWeight: "600",
+    },
+    encouragementText: {
+        fontSize: 14,
+        color: "#A7F3D0",
+        fontStyle: "italic",
+        textAlign: "center",
+        lineHeight: 20,
+    },
+    timelineHeader: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 12,
+    },
+    resetButton: {
+        backgroundColor: "#F59E0B",
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 8,
+    },
+    resetButtonText: {
+        color: "#FFFFFF",
+        fontSize: 12,
+        fontWeight: "600",
+    },
+    entryInfo: {
+        flex: 1,
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+    },
+    deleteButton: {
+        marginLeft: 12,
+        padding: 8,
+    },
+    deleteButtonText: {
+        fontSize: 16,
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    loadingText: {
+        fontSize: 16,
+        color: "#9CA3AF",
     },
     achievements: {
         flexDirection: "row",
@@ -378,5 +730,130 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: "#E5E7EB",
         textAlign: "center",
+    },
+    weightInputContainer: {
+        marginTop: 16,
+        padding: 16,
+        backgroundColor: "#374151",
+        borderRadius: 12,
+    },
+    weightInput: {
+        backgroundColor: "#1F2937",
+        color: "#FFFFFF",
+        padding: 12,
+        borderRadius: 8,
+        fontSize: 18,
+        textAlign: "center",
+        marginBottom: 12,
+    },
+    inputButtons: {
+        flexDirection: "row",
+        gap: 12,
+    },
+    inputButton: {
+        flex: 1,
+        padding: 12,
+        borderRadius: 8,
+        alignItems: "center",
+    },
+    inputButtonText: {
+        color: "#FFFFFF",
+        fontWeight: "600",
+        fontSize: 16,
+    },
+    logButton: {
+        backgroundColor: "#8B5CF6",
+        padding: 16,
+        borderRadius: 12,
+        alignItems: "center",
+        marginTop: 16,
+    },
+    logButtonText: {
+        color: "#FFFFFF",
+        fontWeight: "600",
+        fontSize: 16,
+    },
+    timeline: {
+        marginTop: 20,
+    },
+    timelineTitle: {
+        fontSize: 16,
+        fontWeight: "bold",
+        color: "#FFFFFF",
+        marginBottom: 12,
+    },
+    timelineEntry: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        backgroundColor: "#374151",
+        padding: 12,
+        borderRadius: 8,
+        marginBottom: 8,
+    },
+    timelineDate: {
+        fontSize: 14,
+        color: "#9CA3AF",
+        flex: 1,
+    },
+    timelineWeight: {
+        fontSize: 16,
+        fontWeight: "600",
+        color: "#FFFFFF",
+        flex: 1,
+        textAlign: "center",
+    },
+    timelineChange: {
+        fontSize: 14,
+        fontWeight: "600",
+        flex: 1,
+        textAlign: "right",
+    },
+    challengeContent: {
+        marginTop: 12,
+    },
+    challengeDescription: {
+        fontSize: 14,
+        color: "#9CA3AF",
+        marginBottom: 16,
+        lineHeight: 20,
+    },
+    challengeActions: {
+        gap: 12,
+    },
+    challengeAction: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#374151",
+        padding: 12,
+        borderRadius: 8,
+        gap: 12,
+    },
+    actionIcon: {
+        fontSize: 20,
+    },
+    actionText: {
+        flex: 1,
+        fontSize: 14,
+        color: "#FFFFFF",
+        fontWeight: "500",
+    },
+    actionStatus: {
+        fontSize: 12,
+        color: "#9CA3AF",
+        backgroundColor: "#1F2937",
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 12,
+    },
+    challengeTip: {
+        fontSize: 13,
+        color: "#6B7280",
+        fontStyle: "italic",
+        textAlign: "center",
+        marginTop: 16,
+        padding: 12,
+        backgroundColor: "#374151",
+        borderRadius: 8,
     },
 });
