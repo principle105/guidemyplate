@@ -1,41 +1,148 @@
+import { useAuth } from "@/contexts/AuthContext";
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import {
-    SafeAreaView,
+    Alert, SafeAreaView,
     ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
-    View,
+    View
 } from "react-native";
+
+type SurveyData = {
+    mainReason: string;
+    biggestChallenge: string;
+    eatingPattern: string;
+    satietyLevel: string;
+    currentWeight: string;
+    goalWeight: string;
+    timeline: string;
+    activityLevel: string;
+    problemFoods: string[];
+};
 
 export default function HomeTab() {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === "dark";
+    const { user, logout } = useAuth();
+    const router = useRouter();
+    const [surveyData, setSurveyData] = useState<SurveyData | null>(null);
 
-    // Dynamic data - could be fetched from state/API
-    const userName = "Jacob";
-    const currentWeight = 185;
-    const goalWeight = 165;
+    // Load survey data on mount
+    useEffect(() => {
+        loadSurveyData();
+    }, []);
+
+    const loadSurveyData = async () => {
+        try {
+            const data = await AsyncStorage.getItem("surveyData");
+            if (data) {
+                setSurveyData(JSON.parse(data));
+            }
+        } catch (error) {
+            console.error("Error loading survey data:", error);
+        }
+    };
+
+    const handleLogout = () => {
+        Alert.alert("Log Out", "Are you sure you want to log out?", [
+            { text: "Cancel", style: "cancel" },
+            {
+                text: "Log Out",
+                style: "destructive",
+                onPress: async () => {
+                    await logout();
+                    router.replace("/welcome");
+                },
+            },
+        ]);
+    };
+
+    // Dynamic data - use survey data if available
+    const userName = user?.name || "Jacob";
+    const currentWeight = surveyData
+        ? Number(surveyData.currentWeight)
+        : 185;
+    const goalWeight = surveyData ? Number(surveyData.goalWeight) : 165;
     const weeklyChange = -2.3;
     const streakDays = 12;
 
-    // Today's insights
-    const todayInsights = [
-        {
-            type: "warning",
-            icon: "⚠️",
-            title: "Low Fiber Alert",
-            message: "Only 8g fiber today — this can increase hunger",
-            action: "Add vegetables or beans to dinner",
-        },
-        {
-            type: "success",
-            icon: "✨",
-            title: "Great Protein!",
-            message: "You hit 95g protein — this keeps you full longer",
-            action: null,
-        },
-    ];
+    // Generate personalized insights based on survey data
+    const getPersonalizedInsights = () => {
+        const insights = [];
+
+        // Insight based on biggest challenge
+        if (surveyData?.biggestChallenge === "Late-night snacking") {
+            insights.push({
+                type: "warning",
+                icon: "🌙",
+                title: "Night Eating Alert",
+                message:
+                    "You mentioned late-night snacking is your challenge",
+                action: "Try eating more protein at dinner to reduce cravings",
+            });
+        } else if (surveyData?.biggestChallenge === "Not feeling full") {
+            insights.push({
+                type: "warning",
+                icon: "😋",
+                title: "Satiety Tip",
+                message: "Focus on high-fiber, high-protein foods today",
+                action: "Add beans, Greek yogurt, or eggs to your meals",
+            });
+        } else if (
+            surveyData?.biggestChallenge === "Eating when stressed/bored"
+        ) {
+            insights.push({
+                type: "warning",
+                icon: "😰",
+                title: "Stress Eating Check-In",
+                message: "Notice if you're truly hungry or just stressed",
+                action: "Try a 5-minute walk before reaching for food",
+            });
+        } else {
+            insights.push({
+                type: "warning",
+                icon: "⚠️",
+                title: "Low Fiber Alert",
+                message: "Only 8g fiber today — this can increase hunger",
+                action: "Add vegetables or beans to dinner",
+            });
+        }
+
+        // Insight based on eating pattern
+        if (surveyData?.eatingPattern === "Night eater (most calories after 6pm)") {
+            insights.push({
+                type: "success",
+                icon: "🌅",
+                title: "Morning Strategy",
+                message: "Eat a bigger breakfast to reduce nighttime hunger",
+                action: null,
+            });
+        } else if (surveyData?.eatingPattern === "Skipper (skip meals often)") {
+            insights.push({
+                type: "warning",
+                icon: "⏭️",
+                title: "Don't Skip Meals",
+                message: "Skipping leads to overeating later",
+                action: "Set 3 meal reminders for today",
+            });
+        } else {
+            insights.push({
+                type: "success",
+                icon: "✨",
+                title: "Great Protein!",
+                message: "You hit 95g protein — this keeps you full longer",
+                action: null,
+            });
+        }
+
+        return insights;
+    };
+
+    const todayInsights = getPersonalizedInsights();
 
     // What you're lacking today
     const nutritionGaps = [
@@ -50,11 +157,41 @@ export default function HomeTab() {
         { icon: "🌾", name: "Fiber", current: 8, target: 25, unit: "g" },
     ];
 
-    // Pattern insights
-    const patternInsight = {
-        message: "You lose more weight on weeks with 4+ vegetable days",
-        confidence: "Based on your last 6 weeks",
+    // Generate personalized pattern insight
+    const getPatternInsight = () => {
+        if (surveyData?.mainReason === "Feel more energetic") {
+            return {
+                message:
+                    "Your goal is energy! Focus on iron-rich foods and consistent meal timing",
+                confidence: "Energy dips often come from skipped meals",
+            };
+        } else if (surveyData?.mainReason === "Keep up with my kids") {
+            return {
+                message:
+                    "You're doing this for your kids! Meal prep on Sundays helps busy parents succeed",
+                confidence: "Parents who plan ahead lose 2x more weight",
+            };
+        } else if (surveyData?.mainReason === "Health scare/concern") {
+            return {
+                message:
+                    "Your health matters! Small consistent changes beat crash diets every time",
+                confidence: "Sustainable habits = lasting results",
+            };
+        } else if (surveyData?.mainReason === "Feel confident again") {
+            return {
+                message:
+                    "You deserve to feel amazing! Track non-scale wins like energy & mood too",
+                confidence: "Confidence grows with every healthy choice",
+            };
+        }
+
+        return {
+            message: "You lose more weight on weeks with 4+ vegetable days",
+            confidence: "Based on your last 6 weeks",
+        };
     };
+
+    const patternInsight = getPatternInsight();
 
     return (
         <SafeAreaView
@@ -67,7 +204,7 @@ export default function HomeTab() {
             >
                 {/* Header */}
                 <View style={styles.header}>
-                    <View>
+                    <View style={{ flex: 1 }}>
                         <Text
                             style={[
                                 styles.greeting,
@@ -85,6 +222,12 @@ export default function HomeTab() {
                             Let's tackle today together
                         </Text>
                     </View>
+                    <TouchableOpacity
+                        onPress={handleLogout}
+                        style={styles.logoutButton}
+                    >
+                        <Text style={styles.logoutText}>Log Out</Text>
+                    </TouchableOpacity>
                 </View>
 
                 {/* Goal Progress */}
@@ -652,5 +795,16 @@ const styles = StyleSheet.create({
         fontWeight: "700",
         color: "#1F2937",
         textAlign: "center",
+    },
+    logoutButton: {
+        backgroundColor: "#374151",
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 8,
+    },
+    logoutText: {
+        fontSize: 14,
+        fontWeight: "600",
+        color: "#EF4444",
     },
 });
