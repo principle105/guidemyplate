@@ -1,6 +1,8 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useState } from "react";
 import {
+    ActivityIndicator,
     Alert,
     Image,
     SafeAreaView,
@@ -8,9 +10,7 @@ import {
     Text,
     TouchableOpacity,
     View,
-    ActivityIndicator,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function CameraTab() {
     const [permission, requestPermission] = useCameraPermissions();
