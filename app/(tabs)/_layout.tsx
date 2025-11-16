@@ -66,13 +66,13 @@ export default function TabLayout() {
 
             {/* Left 2 */}
             <Tabs.Screen
-                name="insights"
+                name="camera"
                 options={{
-                    title: "Insights",
+                    title: "Camera",
                     tabBarIcon: ({ color }) => (
                         <IconSymbol
                             size={24}
-                            name="lightbulb.fill"
+                            name="camera.fill"
                             color={color}
                         />
                     ),
@@ -92,27 +92,32 @@ export default function TabLayout() {
 
             {/* Right 1 */}
             <Tabs.Screen
-                name="goals"
+                name="progress"
                 options={{
-                    title: "Goals",
+                    title: "Progress",
                     tabBarIcon: ({ color }) => (
-                        <IconSymbol size={24} name="target" color={color} />
+                        <IconSymbol size={24} name="chart.bar.fill" color={color} />
                     ),
                 }}
             />
 
-            {/* Right 2 */}
+            {/* Hidden tabs */}
+            <Tabs.Screen
+                name="insights"
+                options={{
+                    href: null,
+                }}
+            />
+            <Tabs.Screen
+                name="goals"
+                options={{
+                    href: null,
+                }}
+            />
             <Tabs.Screen
                 name="more"
                 options={{
-                    title: "More",
-                    tabBarIcon: ({ color }) => (
-                        <IconSymbol
-                            size={24}
-                            name="ellipsis.circle"
-                            color={color}
-                        />
-                    ),
+                    href: null,
                 }}
             />
         </Tabs>
